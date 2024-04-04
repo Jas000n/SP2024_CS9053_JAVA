@@ -16,7 +16,7 @@ create table `Lines`
     is_deleted tinyint(1) default 0 not null comment 'logical deletion flag of that record, when delete the record, instead of delete that record, we set that bit to true'
 );
 
-create table PIcture
+create table Picture
 (
     PID        int                  not null comment 'unique identifier'
         primary key,
