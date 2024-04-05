@@ -13,7 +13,9 @@ create table `Lines`
     preY       int                  not null comment 'previous coordinate of y',
     X          int                  not null comment 'current coordinate of x',
     Y          int                  not null comment 'current coordinate of Y',
-    is_deleted tinyint(1) default 0 not null comment 'logical deletion flag of that record, when delete the record, instead of delete that record, we set that bit to true'
+    is_deleted tinyint(1) default 0 not null comment 'logical deletion flag of that record, when delete the record, instead of delete that record, we set that bit to true',
+    constraint Lines_Picture_PID_fk
+        foreign key (PID) references draw_guess.Picture (PID)
 );
 
 create table Picture
@@ -24,29 +26,29 @@ create table Picture
     comment    text                 null comment 'comment given by ChatGPT or other players',
     authorID   int                  not null comment 'id of the author drawing this picture',
     word       text                 not null comment 'the word that the author is drawing',
-    is_deleted tinyint(1) default 0 not null comment 'logic delete bit'
+    is_deleted tinyint(1) default 0 not null comment 'logic delete bit',
+    constraint Picture_Player_UID_fk
+        foreign key (authorID) references draw_guess.Player (UID)
 );
 
 create table Player
 (
-    UID        int                  not null comment 'user ID, unique identifer',
+    UID        int                  not null comment 'user ID, unique identifer'
+        primary key,
     Uname      varchar(255)         not null comment 'user name, should be unique as well ',
     password   char(32)             not null comment 'encrypted password',
     is_deleted tinyint(1) default 0 not null comment 'logic delete bit',
-    constraint Player_pk
-        unique (UID),
     constraint Player_unique
         unique (Uname)
 );
 
 create table Word
 (
-    word        varchar(255)           not null comment 'the word to draw',
+    word        varchar(255)           not null comment 'the word to draw'
+        primary key,
     description varchar(1024)          not null comment 'the description of the word',
     time_limit  int        default 180 not null comment 'the time limit to draw that word(second)',
-    is_deleted  tinyint(1) default 0   not null comment 'logic deletion bit',
-    constraint Word_pk
-        unique (word)
+    is_deleted  tinyint(1) default 0   not null comment 'logic deletion bit'
 )
     comment 'the word bank to draw';
 
