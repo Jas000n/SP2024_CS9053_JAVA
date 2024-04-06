@@ -1,8 +1,11 @@
 package NYU.SPJAVA;
 
+import NYU.SPJAVA.utils.Painter;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.IOException;
 
 public class SimpleDrawing extends JFrame {
     private int line_count = 0;
@@ -82,6 +85,14 @@ public class SimpleDrawing extends JFrame {
         
         eraserButton.addActionListener(e -> {
            eraserMode = eraserButton.isSelected(); // Toggle eraser mode.
+//            try {
+//                Painter.saveComponentAsImage(drawingArea,"src/main/resources/Pics/Test1");
+//                System.out.println("Saved Pic!");
+//            } catch (AWTException ex) {
+//                throw new RuntimeException(ex);
+//            } catch (IOException ex) {
+//                throw new RuntimeException(ex);
+//            }
             if (eraserMode) {
                 changeColorButton.setEnabled(false); // Disable color change while erasing.
             } else {
