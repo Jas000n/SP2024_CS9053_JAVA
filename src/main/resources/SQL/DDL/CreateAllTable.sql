@@ -28,10 +28,17 @@ CREATE TABLE game
 game_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT comment 'unique identifier for a game',
 word_id INT NOT NULL comment 'the scene for this game',
 mode CHAR(1) NOT NULL DEFAULT 'S' comment 'game mode: S: Single, M: Multi-player via waiting room, C: 2 players via challenge/invite',
-status CHAR(1) NOT NULL DEFAULT 'N' comment 'game status: N: New, A: Active, D: Done'
+status CHAR(1) NOT NULL DEFAULT 'N' comment 'game status: N: New, A: Active, D: Done',
+time_limit INT NOT NULL DEFAULT 180 comment 'time limit in seconds',
+creator_id INT NOT NULL comment 'the player id that created this game',
+capacity INT NOT NULL DEFAULT 1 comment 'number of players participated in this game',
+created TIMESTAMP DEFAULT CURRENT_TIMESTAMP comment 'datetime this game was created',
+started TIMESTAMP comment 'datetime this game started (when moved to Active)',
+ended TIMESTAMP  comment 'datetime this game ended'
 );
 
 ALTER TABLE game ADD CONSTRAINT game_word_fk FOREIGN KEY (word_id) REFERENCES word (word_id);
+ALTER TABLE game ADD CONSTRAINT game_player_fk FOREIGN KEY (creator_id) REFERENCES player (player_id);
 -- add check constrain on mode and status values to limit choices
 ALTER TABLE game ADD CONSTRAINT game_mode_check CHECK ( mode IN ('S', 'M'));
 
@@ -40,34 +47,32 @@ ALTER TABLE game ADD CONSTRAINT game_status_check CHECK (status IN ('N', 'A', 'D
 -- mode and status are CHAR(1) instead of a bit to add more flexibility
 
 
-CREATE TABLE game_player
+CREATE TABLE picture
 (
+picture_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT comment 'unique identifier for a picture',
 game_id INT NOT NULL comment 'a FK reference to game_id',
 player_id INT NOT NULL comment 'a FK reference to player_id',
 score INT NULL comment 'a score between 0 and 100 given by GPT judge',
-remark VARCHAR(4096) NULL comment 'GPT remark on the paintaing, capped to 4096 chars'
+remark VARCHAR(4096) NULL comment 'GPT remark on the paintaing, capped to 4096 chars',
+title VARCHAR(1024) NULL comment 'an optional title for the art piece'
 -- changed comment to remark to distinguish it form SQL comment keyword
 -- and capped it to 4096
 );
 
-ALTER TABLE game_player ADD CONSTRAINT game_player_pk PRIMARY KEY (game_id,
-player_id);
+ALTER TABLE picture ADD CONSTRAINT picture_uk UNIQUE (game_id, player_id);
+ALTER TABLE picture ADD CONSTRAINT picture_player_fk FOREIGN KEY (player_id) REFERENCES player (player_id);
 
-ALTER TABLE game_player ADD CONSTRAINT game_player_player_fk FOREIGN KEY (player_id) REFERENCES player (player_id);
-
-ALTER TABLE game_player ADD CONSTRAINT game_player_game_fk FOREIGN KEY (game_id) REFERENCES game (game_id);
+ALTER TABLE picture ADD CONSTRAINT picture_game_fk FOREIGN KEY (game_id) REFERENCES game (game_id);
 -- add check constraint on score to ensure it's within limit
 -- note that check constraints do not fail when the value is null
-ALTER TABLE game_player ADD CONSTRAINT score_check CHECK ( score >= 0
-AND score <= 100);
+ALTER TABLE picture ADD CONSTRAINT score_check CHECK ( score >= 0 AND score <= 100);
 -- game player setup allows for any number of players to join the same game
 
 
 CREATE TABLE line
 (
     line_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT comment 'unique identifier of that line. a collection of lines make up a picture',
-    game_id INT NOT NULL comment 'a FK reference to which game this line belong',
-    player_id INT NOT NULL comment 'a FK reference to the player drawing this line',
+    picture_id INT NOT NULL comment 'FK reference to piture_id',
     pen_size INT NOT NULL comment 'pen size ',
     color_r INT NOT NULL comment 'red',
     color_g INT NOT NULL comment 'green',
@@ -81,6 +86,4 @@ CREATE TABLE line
     is_deleted tinyINT(1) DEFAULT 0 NOT NULL comment 'logical deletion flag of that record, when delete the record, instead of delete that record, we set that bit to true'
 );
 
-ALTER TABLE line ADD CONSTRAINT line_player_fk FOREIGN KEY (player_id) REFERENCES player (player_id);
-
-ALTER TABLE line ADD CONSTRAINT line_game_fk FOREIGN KEY (game_id) REFERENCES game (game_id);
+ALTER TABLE line ADD CONSTRAINT line_picture_fk FOREIGN KEY (picture_id) REFERENCES picture (picture_id);
