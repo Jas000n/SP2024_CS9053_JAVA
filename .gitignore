@@ -37,3 +37,15 @@ build/
 ### Mac OS ###
 .DS_Store
 .idea
+
+### Ignore binary files
+# Ignore `bin` dir
+bin/
+# or
+*/bin/*
+
+### Emacs
+*~
+\#*\#
+*.elc
+.\#*
