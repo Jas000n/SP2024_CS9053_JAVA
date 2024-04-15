@@ -7,6 +7,7 @@ import java.net.URL;
 import NYU.SPJAVA.Entity.ChatGPTResponse;
 import NYU.SPJAVA.utils.ImageToBase64;
 import NYU.SPJAVA.utils.Property;
+import NYU.SPJAVA.utils.Property.CONF;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -19,7 +20,7 @@ public class ChatGPTConnector {
 
         String base64Image = ImageToBase64.convertImageToBase64(imageFilePath);
         System.out.println(base64Image);
-        String apiKey = Property.getChatGPTApiKey();
+        String apiKey = Property.get(CONF.GPT_KEY);
         StringBuilder response = null;
         try {
             String jsonPayload = "{"

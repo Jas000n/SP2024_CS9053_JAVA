@@ -6,12 +6,29 @@ import java.io.InputStream;
 import java.util.Properties;
 
 public class Property {
+	public static enum CONF {
+		// puts constant in enum
+		// constructor allows us to get name using .name attribute
 
+		GPT_KEY("chatgpt.api.key"),
+		DB_URL("database.url"),
+		DB_USER("database.user"),
+		DB_PWD("database.password"),
+		DB_DRIVER("database.driver"),
+		APP_NAME("application.name"),
+		APP_VERSION("application.version");
 
-    // method to get ChatGPT Api Key from resources/conf.properties
-    public static String getChatGPTApiKey() {
+		public final String name;
+		private CONF(String name) {  // constructor
+			this.name = name;
+		}
+	}
+
+	// returns value from conf.properties
+	// key is an enum FROM CONF above
+	public static String get(CONF key) {
         Properties properties = new Properties();
-        String apiKey = null;
+        String prop = null;
 
 
         try (InputStream input = Property.class.getClassLoader().getResourceAsStream("conf.properties")) {
@@ -23,15 +40,17 @@ public class Property {
             properties.load(input);
 
 
-            apiKey = properties.getProperty("chatgpt.api.key");
+            prop = properties.getProperty(key.name);
         } catch (IOException ex) {
             ex.printStackTrace();
         }
 
-        return apiKey;
+        return prop;
     }
 
     public static void main(String[] args) {
-        System.out.println(Property.getChatGPTApiKey());
+        // System.out.println(Property.get(Property.CONF.GPT_KEY));
+		System.out.println(Property.get(Property.CONF.APP_NAME));
+		System.out.println(Property.get(Property.CONF.APP_VERSION));
     }
 }
