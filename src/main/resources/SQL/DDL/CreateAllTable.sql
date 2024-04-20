@@ -8,7 +8,7 @@ CREATE TABLE player
 (
     player_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT comment 'user ID, unique identifer',
     uname varchar(255) NOT NULL comment 'user name, should be unique as well ',
-    password char(32) NOT NULL comment 'encrypted password',
+    password varchar(128) NOT NULL comment 'encrypted password',
     is_deleted tinyINT(1) DEFAULT 0 NOT NULL comment 'logic delete bit'
 );
 
