@@ -16,7 +16,10 @@ public class Property {
 		DB_PWD("database.password"),
 		DB_DRIVER("database.driver"),
 		APP_NAME("application.name"),
-		APP_VERSION("application.version");
+		APP_VERSION("application.version"),
+		REDIS_URL("redis.url"),
+		REDIS_PORT("redis.port");
+		
 
 		public final String name;
 		private CONF(String name) {  // constructor
