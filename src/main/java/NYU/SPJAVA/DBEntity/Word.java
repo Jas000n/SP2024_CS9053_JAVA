@@ -1,4 +1,20 @@
 package NYU.SPJAVA.DBEntity;
 
 public class Word {
+	public final Integer wordID;
+	public final String word;
+
+	public Word(Integer wordID, String word) {
+		this.wordID = wordID;
+		this.word = word;
+	}
+
+	public Word(String word) {
+		this(null, word);
+	}
+
+	@Override
+	public String toString() {
+		return String.format("Word: %s, wordID: %d", this.word, this.wordID);
+	}
 }
