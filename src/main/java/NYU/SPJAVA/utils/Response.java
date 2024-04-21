@@ -1,10 +1,10 @@
 package NYU.SPJAVA.utils;
 
 public class Response {
-	ResponseCode code;
-	String msg;
-	Exception ex;
-	Object data;
+	public ResponseCode code;
+	public String msg;
+	public Exception ex;
+	public Object data;
 	
 	public Response(ResponseCode code, String msg, Exception ex, Object data) {
 		this.code = code;
@@ -32,10 +32,16 @@ public class Response {
 			return description;
 		}
 	}
+	
+	@Override
+	public String toString() {
+		return String.format("Response: %s, Msg: %s", this.code, this.msg);
+	}
+	
 
 	public static void main(String[] args) {
-		Response myResponse = new Response();
-		myResponse.res_code = ResponseCode.SUCCESS;
-		System.out.println(myResponse.res_code);
+		Response myResponse = new Response(ResponseCode.SUCCESS, "succeeded", null, null);
+		System.out.println(myResponse.code);
+		System.out.println(myResponse);
 	}
 }

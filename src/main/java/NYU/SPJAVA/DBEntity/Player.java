@@ -8,6 +8,11 @@ public class Player {
 	private final Integer playerID; // can be null before register/login
 	private final String uname;
 	private final String password;
+	
+	public Player(String uname, String password) {
+		// allow constructing player with just uname and password
+		this(null, uname, password);
+	}
 
 	public Player(Integer PlayerID, String uname, String password) {
 		this.playerID = PlayerID;
@@ -28,9 +33,14 @@ public class Player {
 	public String getUname() {
 		return this.uname;
 	}
-
-	public boolean isPasswordEqual(String password) {
-		return this.password.equals(password);
+	
+	public String getPassword() {
+		return this.password;
+	}
+	
+	@Override
+	public String toString() {
+		return String.format("Player: %s, id: %s", this.uname, this.playerID);
 	}
 
 	public static void main(String[] args) {
@@ -39,7 +49,7 @@ public class Player {
     	String hash = Hashing.sha256().hashString(pwd, StandardCharsets.UTF_8).toString();
     	
     	Player p = new Player(null, "username", pwd);
-    	System.out.print(p.isPasswordEqual(hash));
+    	System.out.print(p.getPassword().equals(hash));
     }
 
 }
