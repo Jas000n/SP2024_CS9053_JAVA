@@ -7,7 +7,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 public class DBConnector {
-	private Connection conn = null;
+	protected Connection conn = null;
 	
 	public void connect() throws Exception {
 		// load driver
@@ -30,7 +30,7 @@ public class DBConnector {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		DBConnector db = new DBConnector();
 		db.connect();
