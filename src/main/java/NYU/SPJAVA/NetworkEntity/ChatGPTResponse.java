@@ -1,4 +1,4 @@
-package NYU.SPJAVA.Entity;
+package NYU.SPJAVA.NetworkEntity;
 
 // put the response json in an entity, can call corresponding getter function to get the score and comment
 public class ChatGPTResponse {
