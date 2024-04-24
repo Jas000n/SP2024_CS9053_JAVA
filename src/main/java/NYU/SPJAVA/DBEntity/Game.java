@@ -101,5 +101,10 @@ public class Game {
 			return false;
 		}
 	}
+	
+	@Override
+	public String toString() {
+		return "Game id: " + this.gameID + " Creator " + this.creator.toString();
+	}
 
 }

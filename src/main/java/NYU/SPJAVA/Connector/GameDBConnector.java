@@ -3,6 +3,7 @@ package NYU.SPJAVA.Connector;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Types;
 
 import NYU.SPJAVA.DBEntity.Game;
 import NYU.SPJAVA.DBEntity.Player;
@@ -10,6 +11,8 @@ import NYU.SPJAVA.DBEntity.Word;
 import NYU.SPJAVA.utils.DateTimeUtil;
 import NYU.SPJAVA.utils.Response;
 import NYU.SPJAVA.utils.Response.ResponseCode;
+
+import org.joda.time.DateTime;
 import org.joda.time.LocalDateTime;
 import NYU.SPJAVA.exceptions.*;
 
@@ -20,7 +23,7 @@ public class GameDBConnector extends DBConnector {
 
 	// none of the other fields should be allowed to change
 	// they should all be set before game creation
-	public final static String updateGameQuery = "UPDATE picasso.game SET status = ?, started = ?, ended = ? ;";
+	public final static String updateGameQuery = "UPDATE picasso.game SET status = ?, started = ?, ended = ? WHERE game_id = ? ;";
 
 	// gameID is the only info local does not have
 	private final static String getGameQuery = "SELECT game_id, created FROM game WHERE creator_id = ? ORDER BY started DESC LIMIT 1;";
@@ -45,17 +48,12 @@ public class GameDBConnector extends DBConnector {
 		} else {
 			int gameID = res.getInt("game_id");
 			LocalDateTime createdBack = DateTimeUtil.toDateTime(res.getTimestamp("created"));
-			if (created != createdBack) {
-				System.out.println("unequal time stamps");
-				System.out.println("Local: " + created);
-				System.out.println("DB: " + createdBack);
-				System.out.println("Local timestamp: " + DateTimeUtil.toTimestamp(created));
-				System.out.println("DB timestamp: " + DateTimeUtil.toTimestamp(createdBack));
-				System.out.println("Local Millies: " + created.toDateTime().getMillis());
-				System.out.println("DB Millies: " + createdBack.toDateTime().getMillis());
-				
+			if (DateTimeUtil.isEqualMillis(created, createdBack)) {
+				return gameID;
+			} else {
+				throw new GameDoesNotExistException("Created Local and DB time mismatch");
 			}
-			return gameID;
+
 		}
 
 	}
@@ -90,14 +88,30 @@ public class GameDBConnector extends DBConnector {
 	}
 
 	private Response updateDBGame(Game game) throws Exception {
+		if (game.getGameID() == null) {
+			throw new SQLException("Game ID cannot be null when updating game");
+		}
+		
 		PreparedStatement statement = conn.prepareStatement(GameDBConnector.updateGameQuery);
 		statement.setString(1, String.valueOf(game.getStatus()));
-		statement.setTimestamp(2, DateTimeUtil.toTimestamp(game.getStarted()));
-		statement.setTimestamp(3, DateTimeUtil.toTimestamp(game.getEnded()));
+		if (game.getStarted() != null) {
+			statement.setTimestamp(2, DateTimeUtil.toTimestamp(game.getStarted()));
+		} else {
+			statement.setNull(2, Types.INTEGER);
+		}
+		if (game.getEnded() != null) {
+			statement.setTimestamp(3, DateTimeUtil.toTimestamp(game.getEnded()));
+		} else {
+			statement.setNull(3, Types.INTEGER);
+		}
+		
+		statement.setInt(4, game.getGameID());
+
 
 		try {
 			statement.executeUpdate();
-			return new Response(ResponseCode.SUCCESS, "Game updated!", null, null);
+			String msg = String.format("Game updated!, id %d", game.getGameID());
+			return new Response(ResponseCode.SUCCESS, msg, null, null);
 		} catch (Exception ex) {
 			return new Response(ResponseCode.FAILED, ex.getMessage(), ex, null);
 
@@ -135,7 +149,7 @@ public class GameDBConnector extends DBConnector {
 		}
 
 	}
-	
+
 	public static void main(String[] args) throws Exception {
 		Player p = new Player(1, "John_Wick", "21f3b88dc607cb2560f90133b90f66d4e12ff129db175c2e9c218f98937c6b74");
 		Word w = new Word(12, "phone");
@@ -144,6 +158,31 @@ public class GameDBConnector extends DBConnector {
 		Response resp = gc.createGame(g);
 		if (resp.code != ResponseCode.SUCCESS) {
 			resp.ex.printStackTrace();
+		} else {
+			g = (Game) resp.data;  // get updated game
+			System.out.println(resp);
+			System.out.println(g);
 		}
+
+		// test update
+
+		g.setStarted(new LocalDateTime());
+		resp = gc.updateDBGame(g);
+
+		if (resp.code != ResponseCode.SUCCESS) {
+			resp.ex.printStackTrace();
+		} else {
+			System.out.println(resp);
+		}
+		
+		g.setEnded(new LocalDateTime());
+		resp = gc.updateDBGame(g);
+		
+		if (resp.code != ResponseCode.SUCCESS) {
+			resp.ex.printStackTrace();
+		} else {
+			System.out.println("Ended updated successfully, " );
+		}
+
 	}
 }
