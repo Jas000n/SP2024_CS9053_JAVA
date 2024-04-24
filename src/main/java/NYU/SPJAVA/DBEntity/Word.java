@@ -12,6 +12,14 @@ public class Word {
 	public Word(String word) {
 		this(null, word);
 	}
+	
+	public int getWordID() {
+		return this.wordID;
+	}
+	
+	public String getWord() {
+		return this.word;
+	}
 
 	@Override
 	public String toString() {
