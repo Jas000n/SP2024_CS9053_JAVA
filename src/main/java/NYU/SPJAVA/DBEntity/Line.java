@@ -9,7 +9,7 @@ public class Line {
     private int color_r;
     private int color_g;
     private int color_b;
-    private Timestamp time;
+    private Long time;
     private boolean is_eraser;
     private int pre_x;
     private int pre_y;
@@ -17,7 +17,7 @@ public class Line {
     private int y;
     private boolean is_deleted = false;
 
-    public Line( int picture_id, int pen_size, int color_r, int color_g, int color_b, Timestamp time, boolean is_eraser, int pre_x, int pre_y, int x, int y) {
+    public Line( int picture_id, int pen_size, int color_r, int color_g, int color_b, Long time, boolean is_eraser, int pre_x, int pre_y, int x, int y) {
         this.picture_id = picture_id;
         this.pen_size = pen_size;
         this.color_r = color_r;
@@ -79,11 +79,11 @@ public class Line {
         this.color_b = color_b;
     }
 
-    public Timestamp getTime() {
+    public Long getTime() {
         return time;
     }
 
-    public void setTime(Timestamp time) {
+    public void setTime(Long time) {
         this.time = time;
     }
 

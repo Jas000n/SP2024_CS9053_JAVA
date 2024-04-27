@@ -11,4 +11,11 @@ public class PicDBConnector {
         return null;
     }
 
+    //update a pic, according to picture id, pass in a pic with other field populated(but dont necessarily have to be a
+    // completed populated pic object
+    //return a bool should be enough
+    public Response update(Picture pic){
+        return null;
+    }
+
 }
