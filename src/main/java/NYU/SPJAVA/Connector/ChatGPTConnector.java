@@ -4,7 +4,7 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import NYU.SPJAVA.Entity.ChatGPTResponse;
+import NYU.SPJAVA.NetworkEntity.ChatGPTResponse;
 import NYU.SPJAVA.utils.ImageToBase64;
 import NYU.SPJAVA.utils.Property;
 import NYU.SPJAVA.utils.Property.CONF;

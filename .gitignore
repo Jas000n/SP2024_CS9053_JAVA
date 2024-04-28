@@ -49,3 +49,6 @@ bin/
 \#*\#
 *.elc
 .\#*
+
+### Saved Pics
+src/main/resources/Pics

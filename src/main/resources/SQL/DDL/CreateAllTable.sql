@@ -8,7 +8,7 @@ CREATE TABLE player
 (
     player_id INT NOT NULL PRIMARY KEY AUTO_INCREMENT comment 'user ID, unique identifer',
     uname varchar(255) NOT NULL comment 'user name, should be unique as well ',
-    password char(32) NOT NULL comment 'encrypted password',
+    password varchar(128) NOT NULL comment 'encrypted password',
     is_deleted tinyINT(1) DEFAULT 0 NOT NULL comment 'logic delete bit'
 );
 
@@ -77,7 +77,7 @@ CREATE TABLE line
     color_r INT NOT NULL comment 'red',
     color_g INT NOT NULL comment 'green',
     color_b INT NOT NULL comment 'blue',
-    timestamp timestamp NOT NULL comment 'timestamp when drawing that line',
+    time BIGINT NOT NULL comment 'timestamp when drawing that line',
     is_eraser tinyINT(1) NOT NULL comment 'whether that line is in eraser mode',
     pre_x INT NOT NULL comment 'previous coordinate of X',
     pre_y INT NOT NULL comment 'previous coordinate of y',

@@ -15,6 +15,6 @@ public class Painter {
         Robot robot = new Robot();
         BufferedImage image = robot.createScreenCapture(new Rectangle(component.getLocationOnScreen(), component.getSize()));
         String timestampAsString = String.valueOf(System.currentTimeMillis());
-        ImageIO.write(image, "PNG", new File(filename+"_"+timestampAsString+".png"));
+        ImageIO.write(image, "PNG", new File(filename+".png"));
     }
 }
