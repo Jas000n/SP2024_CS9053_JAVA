@@ -3,7 +3,7 @@ package NYU.SPJAVA.UI;
 import NYU.SPJAVA.Connector.ChatGPTConnector;
 import NYU.SPJAVA.Connector.GameDBConnector;
 import NYU.SPJAVA.Connector.LineDBConnector;
-import NYU.SPJAVA.Connector.PicDBConnector;
+import NYU.SPJAVA.Connector.PictureDBConnector;
 import NYU.SPJAVA.DBEntity.*;
 import NYU.SPJAVA.NetworkEntity.ChatGPTResponse;
 import NYU.SPJAVA.utils.Painter;
@@ -33,11 +33,11 @@ public class DrawPanel extends JPanel {
     private LineDBConnector lineDBConnector;
     private ArrayList<Line> lines;
     private GameDBConnector gameDBConnector;
-    private PicDBConnector picDBConnector;
+    private PictureDBConnector picDBConnector;
     public DrawPanel(Game singleGame) throws Exception {
         this.game = singleGame;
-        this.picDBConnector = new PicDBConnector();
-        this.picture = (Picture) picDBConnector.addPic(new Picture(singleGame.getGameID(),singleGame.getCreator().getPlayerID())).data;
+        this.picDBConnector = new PictureDBConnector();
+        this.picture = (Picture) picDBConnector.createPicture(new Picture(singleGame,singleGame.getCreator())).data;
         this.lines = new ArrayList<>();
         this.lineDBConnector = new LineDBConnector();
         this.gameDBConnector = new GameDBConnector();
@@ -147,7 +147,7 @@ public class DrawPanel extends JPanel {
             g.drawLine(prevX, prevY, x, y);
             line_count++;
             System.out.println(String.format("line count:%d, prevX:%d,prevY:%d,X:%d,Y:%d,color:%s,width:%d",line_count,prevX,prevY,x,y,currentColor,penWidth ));
-            Line tmp = new Line(picture.getPicture_id(),penWidth,currentColor.getRed(),currentColor.getGreen(),currentColor.getBlue(),System.currentTimeMillis(),
+            Line tmp = new Line(picture.getPictureID(),penWidth,currentColor.getRed(),currentColor.getGreen(),currentColor.getBlue(),System.currentTimeMillis(),
                     eraserMode,prevX,prevY,x,y);
             lines.add(tmp);
         }
@@ -193,16 +193,16 @@ public class DrawPanel extends JPanel {
         // save all lines in DB
         lineDBConnector.saveLines(lines);
         // save screenshot of the picture
-        Painter.saveComponentAsImage(drawingArea,"src/main/resources/Pics/"+this.picture.getPicture_id());
-                System.out.println("Saved Pic "+this.picture.getPicture_id()+"!");
+        Painter.saveComponentAsImage(drawingArea,"src/main/resources/Pics/"+this.picture.getPictureID());
+                System.out.println("Saved Pic "+this.picture.getPictureID()+"!");
         // send picture to ChatGPT connector and retrieve result
-        ChatGPTResponse chatGPTResponse = ChatGPTConnector.sendPostRequest(("src/main/resources/Pics/" + this.picture.getPicture_id()), this.game.getWord().word);
+        ChatGPTResponse chatGPTResponse = ChatGPTConnector.sendPostRequest(("src/main/resources/Pics/" + this.picture.getPictureID())+".png", this.game.getWord().word);
         String score = chatGPTResponse.getScore();
         String comment = chatGPTResponse.getComment();
         //update picture in DB
         this.picture.setRemark(comment);
         this.picture.setScore(Integer.parseInt(score));
-        this.picDBConnector.update(this.picture);
+        this.picDBConnector.updatePicture(this.picture);
         // show score and comment from ChatGPT to user
         JOptionPane.showMessageDialog(null, "Score: "+score+" Comment: "+comment);
     }

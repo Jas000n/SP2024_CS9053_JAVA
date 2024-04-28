@@ -44,6 +44,7 @@ public class Main extends JFrame {
         JButton reviewButton = new JButton("Review");
 
         singleGameButton.addActionListener(e -> {
+            System.out.println("clicked single game");
             Word wordToDraw = ((ArrayList<Word>) wordDBConnector.getWord(1).data).get(0);
             Game singleGame = new Game(wordToDraw, player);
             Response gameCreateRes =  gameDBConnector.createGame(singleGame);
