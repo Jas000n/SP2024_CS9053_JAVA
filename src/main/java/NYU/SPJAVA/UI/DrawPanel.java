@@ -12,7 +12,6 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -167,6 +166,8 @@ public class DrawPanel extends JPanel {
         changeColorButton.addActionListener(this::changeColor);
         toolBar.add(changeColorButton);
 
+        JLabel pensizeLabel = new JLabel("Pen Size:");
+        toolBar.add(pensizeLabel);
         JComboBox<String> penWidthBox = new JComboBox<>(new String[]{"1", "2", "4", "8"});
         penWidthBox.addActionListener(e -> penWidth = Integer.parseInt((String) penWidthBox.getSelectedItem()));
         toolBar.add(penWidthBox);
