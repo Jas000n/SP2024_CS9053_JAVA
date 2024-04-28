@@ -32,6 +32,7 @@ public class Picture {
 		this.remark = remark;
 		this.title = title;
 	}
+	public Picture(){}
 
 	public Picture(Game game, Player player) {
 		this(null, game, player, null, null, null);
