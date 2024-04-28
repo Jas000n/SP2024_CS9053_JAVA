@@ -33,12 +33,15 @@ public class ReviewPanel extends JPanel {
 
         JButton backButton = new JButton("Back to Menu");
         backButton.addActionListener(backListener);
-        controlPanel.add(backButton);
 
+        controlPanel.add(backButton);
+        JLabel label = new JLabel("Picture ID:");
+        controlPanel.add(label);
         JTextField textField = new JTextField(10);
         controlPanel.add(textField);
 
-        JButton submitButton = new JButton("Submit");
+        JButton submitButton = new JButton("Re-Paint");
+        JButton clearButton = new JButton("Clear");
         JPanel drawingArea = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -52,6 +55,9 @@ public class ReviewPanel extends JPanel {
 
         submitButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+//                System.out.println("clear");
+//                drawingArea.repaint();
+//                System.out.println("done");
                 picture_ID = Integer.parseInt(textField.getText());
                 ArrayList<Line> drawnLine = getDrawnLine();
                 paintLines(drawingArea.getGraphics(),drawnLine);
@@ -59,24 +65,30 @@ public class ReviewPanel extends JPanel {
             }
         });
         controlPanel.add(submitButton);
-
+        controlPanel.add(clearButton);
         add(controlPanel, BorderLayout.NORTH);
+        backButton.addActionListener(
+                new ActionListener() {
 
+                    @Override
+                    public void actionPerformed(ActionEvent e) {
+                        drawingArea.repaint();
+                    }
+                }
+        );
+        clearButton.addActionListener(e -> drawingArea.repaint());
 
     }
 
     private void paintLines(Graphics g, ArrayList<Line> lines) {
-        // 先按时间戳对线条进行排序
         lines.sort(Comparator.comparingLong(Line::getTime));
 
         long prevTime = 0;
         for (Line line : lines) {
             long currentTime = line.getTime();
             if (prevTime != 0) {
-                // 计算前一个线条和当前线条之间的时间差(以毫秒为单位)
-                long timeDiff = currentTime - prevTime;
+                long timeDiff = (currentTime - prevTime)/5;
                 try {
-                    // 休眠相应的时间
                     Thread.sleep(timeDiff);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -84,7 +96,12 @@ public class ReviewPanel extends JPanel {
             }
 
             Color tmp = new Color(line.getColor_r(), line.getColor_g(), line.getColor_b());
-            g.setColor(eraserMode ? getBackground() : tmp);
+            if(line.isIs_eraser()){
+                g.setColor(Color.WHITE);
+            }else {
+                g.setColor(tmp);
+            }
+
             ((Graphics2D) g).setStroke(new BasicStroke(line.getPen_size()));
             g.drawLine(line.getPre_x(), line.getPre_y(), line.getX(), line.getY());
 
@@ -101,5 +118,6 @@ public class ReviewPanel extends JPanel {
 //        }
         return lines;
     }
+
 }
 
