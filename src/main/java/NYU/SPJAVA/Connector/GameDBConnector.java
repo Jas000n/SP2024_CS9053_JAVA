@@ -4,8 +4,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 
 import NYU.SPJAVA.DBEntity.Game;
+import NYU.SPJAVA.DBEntity.Picture;
 import NYU.SPJAVA.DBEntity.Player;
 import NYU.SPJAVA.DBEntity.Word;
 import NYU.SPJAVA.utils.DateTimeUtil;
@@ -27,6 +29,8 @@ public class GameDBConnector extends DBConnector {
 
 	// gameID is the only info local does not have
 	private final static String getGameQuery = "SELECT game_id, created FROM game WHERE creator_id = ? ORDER BY started DESC LIMIT 1;";
+
+	private final static String getPlayers = "SELECT player_id, uname FROM player WHERE player_id IN (SELECT player_id FROM game WHERE game_id = ?) ;";
 
 	public GameDBConnector() throws Exception {
 		super();
@@ -91,7 +95,7 @@ public class GameDBConnector extends DBConnector {
 		if (game.getGameID() == null) {
 			throw new SQLException("Game ID cannot be null when updating game");
 		}
-		
+
 		PreparedStatement statement = conn.prepareStatement(GameDBConnector.updateGameQuery);
 		statement.setString(1, String.valueOf(game.getStatus()));
 		if (game.getStarted() != null) {
@@ -104,9 +108,8 @@ public class GameDBConnector extends DBConnector {
 		} else {
 			statement.setNull(3, Types.INTEGER);
 		}
-		
-		statement.setInt(4, game.getGameID());
 
+		statement.setInt(4, game.getGameID());
 
 		try {
 			statement.executeUpdate();
@@ -115,6 +118,28 @@ public class GameDBConnector extends DBConnector {
 		} catch (Exception ex) {
 			return new Response(ResponseCode.FAILED, ex.getMessage(), ex, null);
 
+		}
+	}
+
+	private ArrayList<Player> getPlayers(Game game) throws Exception {
+		// fetches all players for specific game
+		PreparedStatement statement = conn.prepareStatement(GameDBConnector.getPlayers);
+		statement.setInt(1, game.getGameID());
+
+		ResultSet res = statement.executeQuery();
+
+		if (!res.next()) {
+			// result set is empty
+			String msg = String.format("Game does not exist!");
+			throw new GameDoesNotExistException(msg);
+
+		} else {
+			ArrayList<Player> players = new ArrayList<>();
+			do {
+				players.add(new Player(res.getInt("player_id"), res.getString("uname"), "DummyPassword")); // set password to hashed dummy
+			} while(res.next());
+			
+			return players;
 		}
 	}
 
@@ -141,7 +166,7 @@ public class GameDBConnector extends DBConnector {
 	public Response updateGame(Game game) {
 		try {
 			updateDBGame(game);
-			String msg = "Game updated successfully";
+			String msg = String.format("Game updated successfully, game id %d", game.getGameID());
 			return new Response(ResponseCode.SUCCESS, msg, null, null);
 		} catch (Exception ex) {
 			String msg = "Failed to update game";
@@ -150,16 +175,56 @@ public class GameDBConnector extends DBConnector {
 
 	}
 
+	public Response getGamePlayers(Game game) {
+		ArrayList<Player> players;
+		try {
+			players = getPlayers(game);
+			String msg = String.format("Retrived Players for game id %d", game.getGameID());
+			return new Response(ResponseCode.SUCCESS, msg, null, players);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+			String msg = String.format("Failed to fetch players for game id %d", game.getGameID());
+			return new Response(ResponseCode.FAILED, msg, ex, null);
+		}
+	}
+
+	private ArrayList<Picture> getPictures(Game game) throws Exception {
+		PictureDBConnector pc = new PictureDBConnector();
+		Response resp = getGamePlayers(game);
+		if (resp.code != ResponseCode.SUCCESS) {
+			throw resp.ex;
+		} else {
+			ArrayList<Player> players = (ArrayList<Player>) resp.data;
+			ArrayList<Picture> pictures = new ArrayList<>();
+			for (Player p : players) {
+				pictures.add(pc.getMyPicture(game, p));
+			}
+			return pictures;
+		}
+	}
+
+	public Response getGamePictures(Game game) {
+		ArrayList<Picture> pictures;
+		try {
+			pictures = getPictures(game);
+			String msg = String.format("Retrived all pictures for game id %d", game.getGameID());
+			return new Response(ResponseCode.SUCCESS, msg, null, pictures);
+		} catch (Exception ex) {
+			String msg = String.format("Failed to retrive pictures for game id %d", game.getGameID());
+			return new Response(ResponseCode.FAILED, msg, ex, null);
+		}
+	}
+
 	public static void main(String[] args) throws Exception {
-		Player p = new Player(1, "John_Wick", "21f3b88dc607cb2560f90133b90f66d4e12ff129db175c2e9c218f98937c6b74");
-		Word w = new Word(12, "phone");
+		Player p = new Player(1, "John_Wick", "I am back!");
+		Word w = new Word(1, "phone");
 		Game g = new Game(w, p);
 		GameDBConnector gc = new GameDBConnector();
 		Response resp = gc.createGame(g);
 		if (resp.code != ResponseCode.SUCCESS) {
 			resp.ex.printStackTrace();
 		} else {
-			g = (Game) resp.data;  // get updated game
+			g = (Game) resp.data; // get updated game
 			System.out.println(resp);
 			System.out.println(g);
 		}
@@ -174,14 +239,14 @@ public class GameDBConnector extends DBConnector {
 		} else {
 			System.out.println(resp);
 		}
-		
+
 		g.setEnded(new LocalDateTime());
 		resp = gc.updateDBGame(g);
-		
+
 		if (resp.code != ResponseCode.SUCCESS) {
 			resp.ex.printStackTrace();
 		} else {
-			System.out.println("Ended updated successfully, " );
+			System.out.println("Ended updated successfully, ");
 		}
 
 	}

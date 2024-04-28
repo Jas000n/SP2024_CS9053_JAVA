@@ -41,9 +41,10 @@ public class WordDBConnector extends DBConnector {
 
 	/**
 	 * returns up to n random words from the db word table
+	 * 
 	 * @param n
-	 * @return Response where data object is ArrayList<Word>
-	 * Response.Exception: SQLException, Exception
+	 * @return Response where data object is ArrayList<Word> Response.Exception:
+	 *         SQLException, Exception
 	 */
 	public Response getWord(int n) {
 		try {
@@ -56,7 +57,7 @@ public class WordDBConnector extends DBConnector {
 	}
 
 	public static void main(String[] args) throws Exception {
-		
+
 		// test retrieveWord
 		WordDBConnector wc = new WordDBConnector();
 		Response resp = wc.getWord(2);
@@ -64,7 +65,7 @@ public class WordDBConnector extends DBConnector {
 		if (resp.ex != null) {
 			resp.ex.printStackTrace();
 		} else {
-			ArrayList<Word> words = (ArrayList<Word>)resp.data;
+			ArrayList<Word> words = (ArrayList<Word>) resp.data;
 			System.out.println(words.toString());
 		}
 	}

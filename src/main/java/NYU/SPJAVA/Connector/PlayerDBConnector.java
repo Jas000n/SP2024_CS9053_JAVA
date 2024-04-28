@@ -15,7 +15,7 @@ import NYU.SPJAVA.exceptions.*;
 public class PlayerDBConnector extends DBConnector {
 	private static final String getUserQuery = "SELECT player_id, uname, password FROM picasso.player WHERE uname = ? ;";
 	private static final String addUserQuery = "INSERT INTO picasso.player(uname, password) VALUES (?, ?) ;";
-	
+
 	public PlayerDBConnector() throws Exception {
 		super();
 		connect(); // connects to the db
@@ -53,15 +53,15 @@ public class PlayerDBConnector extends DBConnector {
 			return new Player(playerID, uname, password);
 		}
 	}
-	
+
 	private Player addUser(Player player) throws SQLException, UserDoesNotExistException, PasswordMismatchException {
 		PreparedStatement statement = conn.prepareStatement(PlayerDBConnector.addUserQuery);
 		statement.setString(1, player.getUname());
 		statement.setString(2, player.getPassword());
-		
+
 		// add user to db
 		statement.executeUpdate();
-		
+
 		// confirm the user was added
 		// populate playerID
 		return getUser(player);
@@ -94,7 +94,7 @@ public class PlayerDBConnector extends DBConnector {
 				String msg = String.format("Failed to create new user %s!", player.getUname());
 				return new Response(ResponseCode.FAILED, msg, e, null);
 			}
-			
+
 		} catch (Exception ex) {
 			// some other exceptions, return as is
 			return new Response(ResponseCode.FAILED, ex.getMessage(), ex, null);
@@ -105,8 +105,7 @@ public class PlayerDBConnector extends DBConnector {
 	 * authenticates player
 	 * 
 	 * @param player
-	 * @return new player instance with playerID populated
-	 * TODO: add player to Redis
+	 * @return new player instance with playerID populated TODO: add player to Redis
 	 */
 	public Response login(Player player) {
 		try {
@@ -124,26 +123,25 @@ public class PlayerDBConnector extends DBConnector {
 	 * logs out player
 	 * 
 	 * @param player
-	 * @return
-	 * TODO: remove player from Redis
+	 * @return TODO: remove player from Redis
 	 */
 	public Response logout(Player player) {
 		// TODO: remove user from Redis online set
 		String msg = "user logged out!";
 		return new Response(ResponseCode.SUCCESS, msg, null, null);
 	}
-	
+
 	public static void main(String args[]) throws Exception {
 		// test creating and adding players
 		String pwd1 = Hashing.sha256().hashString("I am back!", StandardCharsets.UTF_8).toString();
 		String pwd2 = Hashing.sha256().hashString("The high table", StandardCharsets.UTF_8).toString();
 		Player p1 = new Player("John_Wick", pwd1);
 		Player p2 = new Player("The_Elder", pwd2);
-		
+
 		System.out.println(p1.toString());
-		
+
 		PlayerDBConnector pc = new PlayerDBConnector();
-		
+
 		Response resp = null;
 		try {
 			resp = pc.login(p1);
@@ -153,23 +151,22 @@ public class PlayerDBConnector extends DBConnector {
 		} catch (Exception o) {
 			o.printStackTrace();
 		}
-		
-		
+
 		// register player
 		Response resp1 = pc.register(p1);
 		Response resp2 = pc.register(p2);
-		
+
 		Player newP1, newP2;
-		
+
 		if (resp1.code == ResponseCode.SUCCESS && resp1.code == ResponseCode.SUCCESS) {
 			// new players registered successfully!
-			newP1= (Player)resp1.data;
-			newP2 = (Player)resp2.data;
+			newP1 = (Player) resp1.data;
+			newP2 = (Player) resp2.data;
 			System.out.println(resp1.toString());
 			System.out.println(newP1.toString());
 			System.out.println(resp2.toString());
 			System.out.println(newP2.toString());
-			
+
 			// log in players
 			resp1 = pc.login(p1);
 			resp2 = pc.login(p2);
@@ -177,10 +174,10 @@ public class PlayerDBConnector extends DBConnector {
 			System.out.println(resp2.toString());
 			System.out.println(resp1.data.toString());
 			System.out.println(resp2.data.toString());
-			
+
 		} else {
 			// something went wrong
-			
+
 			System.out.println(resp1.toString());
 			resp1.ex.printStackTrace();
 			System.out.println(resp2.toString());
