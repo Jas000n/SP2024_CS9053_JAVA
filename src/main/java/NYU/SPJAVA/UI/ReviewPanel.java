@@ -61,7 +61,7 @@ public class ReviewPanel extends JPanel {
                 picture_ID = Integer.parseInt(textField.getText());
                 ArrayList<Line> drawnLine = getDrawnLine();
                 paintLines(drawingArea.getGraphics(),drawnLine);
-
+                JOptionPane.showMessageDialog(null, "Finished!");
             }
         });
         controlPanel.add(submitButton);
