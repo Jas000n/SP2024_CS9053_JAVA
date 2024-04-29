@@ -20,7 +20,7 @@ public class PictureDBConnector extends DBConnector {
 	// player_id, score, remark, title WHERE game_id = ? ;";
 	private final static String insertPictureQuery = "INSERT INTO picture(game_id, player_id, score, remark, title) "
 			+ "VALUES (?, ?, ?, ?, ?);";
-	private final static String updatePictureQuery = "UPDATE picasso.picture SET score = ?, remark = ?, title = ?"
+	private final static String updatePictureQuery = "UPDATE picasso.picture SET score = ?, remark = ?, title = ? "
 			+ "WHERE picture_id = ? ;";
 
 	public PictureDBConnector() throws Exception {

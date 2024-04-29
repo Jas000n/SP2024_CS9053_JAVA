@@ -21,9 +21,9 @@ public class DBConnector {
 			Class.forName(Property.get(CONF.DB_DRIVER));
 			
 			// connect
-			System.out.println("testing connection to database");
+			//System.out.println("testing connection to database");
 			conn = DriverManager.getConnection(url, user, pwd);
-			System.out.println("connection successful!");
+			//System.out.println("connection successful!");
 			
 		} catch (Exception e) {
 			System.out.println("connection failed!");

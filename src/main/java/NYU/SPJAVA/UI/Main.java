@@ -2,9 +2,11 @@ package NYU.SPJAVA.UI;
 
 import NYU.SPJAVA.Connector.GameDBConnector;
 import NYU.SPJAVA.Connector.PlayerDBConnector;
+import NYU.SPJAVA.Connector.RedisConnector;
 import NYU.SPJAVA.Connector.WordDBConnector;
 import NYU.SPJAVA.DBEntity.Game;
 import NYU.SPJAVA.DBEntity.Player;
+import NYU.SPJAVA.DBEntity.PlayerVO;
 import NYU.SPJAVA.DBEntity.Word;
 import NYU.SPJAVA.utils.Response;
 import com.google.common.hash.Hashing;
@@ -21,6 +23,7 @@ public class Main extends JFrame {
     JPanel cardPanel = new JPanel(cardLayout);
     boolean isLogin = false;
     Player player;
+    RedisConnector redisConnector;
 
     public Main() throws Exception {
         setTitle("Picasso");
@@ -28,11 +31,55 @@ public class Main extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
         setLocationRelativeTo(null);  // Center the frame
-
+        redisConnector = new RedisConnector();
         initializeUI();
         add(cardPanel);
         setVisible(true);
     }
+//    private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
+//        int delay = 8000; //  refresh every 2 seconds
+//        new javax.swing.Timer(delay, (e) -> {
+//            ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayer();
+//
+//            DefaultListModel<String> model = new DefaultListModel<>();
+//            for (PlayerVO player : allOnlinePlayers) {
+//                model.addElement(player.getUname());
+//            }
+//            JList<String> list = new JList<>(model);
+//            onlinePlayer.setViewportView(list);
+//
+//            SwingUtilities.invokeLater(() -> onlinePlayer.revalidate());
+//
+//            //jump to single game
+//            WordDBConnector wordDBConnector = null;
+//            GameDBConnector gameDBConnector = null;
+//            try {
+//                gameDBConnector = new GameDBConnector();
+//            } catch (Exception ex) {
+//                throw new RuntimeException(ex);
+//            }
+//            try {
+//                wordDBConnector = new WordDBConnector();
+//            } catch (Exception ex) {
+//                throw new RuntimeException(ex);
+//            }
+//            System.out.println("clicked single game");
+//            Word wordToDraw = ((ArrayList<Word>) wordDBConnector.getWord(1).data).get(0);
+//            Game singleGame = new Game(wordToDraw, player);
+//            Response gameCreateRes =  gameDBConnector.createGame(singleGame);
+//            singleGame = (Game)gameCreateRes.data;
+//            DrawPanel singleGamePanel = null;
+//            try {
+//                singleGamePanel = new DrawPanel(singleGame);
+//            } catch (Exception ex) {
+//                throw new RuntimeException(ex);
+//            }
+//            cardPanel.add(singleGamePanel, "SingleGame");
+//            cardLayout.show(cardPanel, "SingleGame");
+//
+//        }).start();
+//    }
+
 
     private void initializeUI() throws Exception {
         PlayerDBConnector playerDBConnector = new PlayerDBConnector();
@@ -43,6 +90,7 @@ public class Main extends JFrame {
         JButton singleGameButton = new JButton("Single Game");
         JButton reviewButton = new JButton("Review");
 
+        //single game button event listener
         singleGameButton.addActionListener(e -> {
             System.out.println("clicked single game");
             Word wordToDraw = ((ArrayList<Word>) wordDBConnector.getWord(1).data).get(0);
@@ -80,6 +128,13 @@ public class Main extends JFrame {
         JButton registerButton = new JButton("Register");
         registerButton.setBounds(180, 80, 100, 25);
         menuPanel.add(registerButton);
+
+        DefaultListModel<String> listModel = new DefaultListModel<>();
+        JList<String> gameModesList = new JList<>(listModel);
+        JScrollPane listScrollPane = new JScrollPane(gameModesList);
+        listScrollPane.setPreferredSize(new Dimension(200, 100));
+        menuPanel.add(listScrollPane,BorderLayout.SOUTH);
+//        this.retrieveOnlinePlayer(listScrollPane);
 
         loginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
@@ -128,7 +183,9 @@ public class Main extends JFrame {
         cardPanel.add(reviewPanel, "Review");
 
         cardLayout.show(cardPanel, "MainMenu");  // Show the main menu first
+
     }
+
 
     public static void main(String[] args) throws Exception {
         new Main();
