@@ -64,7 +64,7 @@ public class LineDBConnector extends DBConnector {
 		} else {
 			ArrayList<Line> lines = new ArrayList<>();
 			do {
-				lines.add(new Line(res.getInt("line_id"), picture.getPictureID(), res.getInt("pen_side"),
+				lines.add(new Line(res.getInt("line_id"), picture.getPictureID(), res.getInt("pen_size"),
 						res.getInt("color_r"), res.getInt("color_g"), res.getInt("color_b"), res.getLong("time"),
 						res.getBoolean("is_eraser"), res.getInt("pre_x"), res.getInt("pre_y"), res.getInt("x"),
 						res.getInt("y"), res.getBoolean("is_deleted")));
@@ -90,7 +90,7 @@ public class LineDBConnector extends DBConnector {
 	public Response getLines(Picture picture) {
 		try {
 			ArrayList<Line> lines = getPictureLines(picture);
-			String msg = String.format("got %d lines from db for picture id %", lines.size(), picture.getPictureID());
+			String msg = String.format("got %d lines from db for picture id %d", lines.size(), picture.getPictureID());
 			return new Response(ResponseCode.SUCCESS, msg, null, lines);
 		} catch (Exception ex) {
 			String msg = String.format("Failed to fetch lines for picture id %d", picture.getPictureID());
@@ -98,4 +98,14 @@ public class LineDBConnector extends DBConnector {
 		}
 	}
 
+	public static void main(String[] args) throws Exception {
+		LineDBConnector dbConnector = new LineDBConnector();
+		Picture tmp = new Picture();
+		tmp.setPictureID(1);
+		System.out.println(tmp.getPictureID());
+		ArrayList<Line> lines = (ArrayList<Line>) dbConnector.getLines(tmp).data;
+		for(Line line : lines) {
+			System.out.println(line);
+		}
+	}
 }
