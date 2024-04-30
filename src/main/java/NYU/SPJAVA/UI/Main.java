@@ -36,49 +36,22 @@ public class Main extends JFrame {
         add(cardPanel);
         setVisible(true);
     }
-//    private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
-//        int delay = 8000; //  refresh every 2 seconds
-//        new javax.swing.Timer(delay, (e) -> {
-//            ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayer();
-//
-//            DefaultListModel<String> model = new DefaultListModel<>();
-//            for (PlayerVO player : allOnlinePlayers) {
-//                model.addElement(player.getUname());
-//            }
-//            JList<String> list = new JList<>(model);
-//            onlinePlayer.setViewportView(list);
-//
-//            SwingUtilities.invokeLater(() -> onlinePlayer.revalidate());
-//
-//            //jump to single game
-//            WordDBConnector wordDBConnector = null;
-//            GameDBConnector gameDBConnector = null;
-//            try {
-//                gameDBConnector = new GameDBConnector();
-//            } catch (Exception ex) {
-//                throw new RuntimeException(ex);
-//            }
-//            try {
-//                wordDBConnector = new WordDBConnector();
-//            } catch (Exception ex) {
-//                throw new RuntimeException(ex);
-//            }
-//            System.out.println("clicked single game");
-//            Word wordToDraw = ((ArrayList<Word>) wordDBConnector.getWord(1).data).get(0);
-//            Game singleGame = new Game(wordToDraw, player);
-//            Response gameCreateRes =  gameDBConnector.createGame(singleGame);
-//            singleGame = (Game)gameCreateRes.data;
-//            DrawPanel singleGamePanel = null;
-//            try {
-//                singleGamePanel = new DrawPanel(singleGame);
-//            } catch (Exception ex) {
-//                throw new RuntimeException(ex);
-//            }
-//            cardPanel.add(singleGamePanel, "SingleGame");
-//            cardLayout.show(cardPanel, "SingleGame");
-//
-//        }).start();
-//    }
+    private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
+        int delay = 8000; //  refresh every 2 seconds
+        new javax.swing.Timer(delay, (e) -> {
+            ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayers();
+
+            DefaultListModel<String> model = new DefaultListModel<>();
+            for (PlayerVO player : allOnlinePlayers) {
+                model.addElement(player.getUname());
+            }
+            JList<String> list = new JList<>(model);
+            onlinePlayer.setViewportView(list);
+
+            SwingUtilities.invokeLater(() -> onlinePlayer.revalidate());
+
+        }).start();
+    }
 
 
     private void initializeUI() throws Exception {
@@ -195,7 +168,8 @@ public class Main extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-               if(Main.this.player.getPlayerID()!=null){
+               if(Main.this.player!=null&&Main.this.player.getPlayerID()!=null){
+                   System.out.println(Main.this.player);
                    redisConnector.playerOffline(new PlayerVO(String.valueOf(Main.this.player.getPlayerID()),Main.this.player.getUname(),"Offline"));
                }
                 System.exit(0);
