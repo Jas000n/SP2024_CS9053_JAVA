@@ -4,10 +4,7 @@ import NYU.SPJAVA.Connector.GameDBConnector;
 import NYU.SPJAVA.Connector.PlayerDBConnector;
 import NYU.SPJAVA.Connector.RedisConnector;
 import NYU.SPJAVA.Connector.WordDBConnector;
-import NYU.SPJAVA.DBEntity.Game;
-import NYU.SPJAVA.DBEntity.Player;
-import NYU.SPJAVA.DBEntity.PlayerVO;
-import NYU.SPJAVA.DBEntity.Word;
+import NYU.SPJAVA.DBEntity.*;
 import NYU.SPJAVA.utils.Response;
 import com.google.common.hash.Hashing;
 
@@ -17,6 +14,7 @@ import java.awt.event.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class Main extends JFrame {
     CardLayout cardLayout = new CardLayout();
@@ -36,36 +34,114 @@ public class Main extends JFrame {
         add(cardPanel);
         setVisible(true);
     }
-    private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
-        int delay = 1000; // refresh every second
-        new javax.swing.Timer(delay, (e) -> {
-            ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayers();
+//    private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
+//        int delay = 1000; // refresh every second
+//        new javax.swing.Timer(delay, (e) -> {
+//            if  (player!=null&&player.getPlayerID()!=null) {
+//                DoubleGameRoom doubleGameRoom = redisConnector.retrieveRoomByInvitedID(player.getPlayerID());
+//                String msg = "You are invited in a double game with "+doubleGameRoom.getHostPlayerID()+" with word: "+doubleGameRoom.getWord();
+//                JOptionPane.showMessageDialog(null, msg);
+//            }
+//            ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayers();
+//            DefaultListModel<String> model = new DefaultListModel<>();
+//            for (PlayerVO player : allOnlinePlayers) {
+//                model.addElement(player.getPlayerID()+":"+player.getUname() + " (" + player.getStatus() + ")");
+//            }
+//            JList<String> list = new JList<>(model);
+//            onlinePlayer.setViewportView(list);
+//
+//            // Add Mouse Listener to JList
+//            list.addMouseListener(new MouseAdapter() {
+//                public void mouseClicked(MouseEvent evt) {
+//                    JList list = (JList)evt.getSource();
+//                    if (evt.getClickCount() == 1) {
+//                        int index = list.locationToIndex(evt.getPoint());
+//                        if (index >= 0) {
+//                            String item = model.getElementAt(index);
+//                            int hostID = Main.this.player.getPlayerID();
+//                            int invitedID = Integer.parseInt(item.split(":")[0]);
+//                            if(hostID!=invitedID){
+//                                System.out.print(hostID+" invited "+invitedID+" in a double game ");
+//                                boolean result = redisConnector.hostInvitePlayer(hostID, invitedID, "test");
+//                                if(result){
+//                                    System.out.println("and succeeded!");
+//                                }else {
+//                                    System.out.println("and failed");
+//                                }
+//                            }
+//
+//
+//
+//                        }
+//                    }
+//                }
+//            });
+//
+//            SwingUtilities.invokeLater(() -> onlinePlayer.revalidate());
+//
+//        }).start();
+//    }
+private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
+    int delay = 1000; // refresh every second
+    ArrayList<PlayerVO> currentPlayers = new ArrayList<>(); // To track changes in player list
+    AtomicReference<String> lastInvitedMsg = new AtomicReference<>(); // To avoid repetitive messages
 
+    new javax.swing.Timer(delay, (e) -> {
+        ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayers();
+        if (!allOnlinePlayers.equals(currentPlayers)) {
+            currentPlayers.clear();
+            currentPlayers.addAll(allOnlinePlayers);
             DefaultListModel<String> model = new DefaultListModel<>();
             for (PlayerVO player : allOnlinePlayers) {
-                model.addElement(player.getUname() + " (" + player.getStatus() + ")");
+                model.addElement(player.getPlayerID() + ":" + player.getUname() + " (" + player.getStatus() + ")");
             }
-            JList<String> list = new JList<>(model);
-            onlinePlayer.setViewportView(list);
 
-            // Add Mouse Listener to JList
-            list.addMouseListener(new MouseAdapter() {
-                public void mouseClicked(MouseEvent evt) {
-                    JList list = (JList)evt.getSource();
-                    if (evt.getClickCount() == 1) {
-                        int index = list.locationToIndex(evt.getPoint());
-                        if (index >= 0) {
-                            String item = model.getElementAt(index);
-                            System.out.println("Clicked on: " + item);
-                        }
+            SwingUtilities.invokeLater(() -> {
+                JList<String> list = new JList<>(model);
+                onlinePlayer.setViewportView(list);
+                list.addMouseListener(new MouseAdapter() {
+                    public void mouseClicked(MouseEvent evt) {
+                        handleMouseClick(evt, list, model);
+                    }
+                });
+                onlinePlayer.revalidate();
+            });
+        }
+
+        if(player!=null && player.getPlayerID()!=null){
+            DoubleGameRoom doubleGameRoom = redisConnector.retrieveRoomByInvitedID(player.getPlayerID());
+            if (doubleGameRoom != null) {
+                String msg = "You are invited in a double game with " + doubleGameRoom.getHostPlayerID() + " with word: " + doubleGameRoom.getWord();
+                if (!msg.equals(lastInvitedMsg)) {
+                    lastInvitedMsg.set(msg);
+                    JOptionPane.showMessageDialog(null, msg);
+                }
+            }
+        }
+
+    }).start();
+}
+
+    private void handleMouseClick(MouseEvent evt, JList<String> list, DefaultListModel<String> model) {
+        if (evt.getClickCount() == 1) {
+            int index = list.locationToIndex(evt.getPoint());
+            if (index >= 0) {
+                String item = model.getElementAt(index);
+                int hostID = Main.this.player.getPlayerID();
+                int invitedID = Integer.parseInt(item.split(":")[0]);
+                if (hostID != invitedID) {
+                    System.out.print(hostID + " invited " + invitedID + " in a double game ");
+                    boolean result = redisConnector.hostInvitePlayer(hostID, invitedID, "test");
+                    if (result) {
+                        System.out.println("and succeeded!");
+                    } else {
+                        System.out.println("and failed");
                     }
                 }
-            });
-
-            SwingUtilities.invokeLater(() -> onlinePlayer.revalidate());
-
-        }).start();
+            }
+        }
     }
+
 
 
 

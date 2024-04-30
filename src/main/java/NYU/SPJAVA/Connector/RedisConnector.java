@@ -46,14 +46,24 @@ public class RedisConnector {
 	}
 
 	public boolean hostInvitePlayer(int hostID, int playerID, String word) {
-		DoubleGameRoom gameRoom = new DoubleGameRoom(hostID, playerID, word, 0, 0);
-		String key = "gameRoom:" + hostID;
-		jedis.hset(key, "hostPlayerID", String.valueOf(gameRoom.getHostPlayerID()));
-		jedis.hset(key, "invitedPlayerID", String.valueOf(gameRoom.getInvitedPlayerID()));
-		jedis.hset(key, "word", gameRoom.getWord());
-		jedis.hset(key, "hostScore", String.valueOf(gameRoom.getHostScore()));
-		jedis.hset(key, "invitedScore", String.valueOf(gameRoom.getInvitedScore()));
-		return true;
+		String hostKey = "player:" + hostID;
+		String playerKey = "player:" + playerID;
+
+		// Retrieve the status of both players from Redis
+		String hostStatus = jedis.hget(hostKey, "status");
+		String playerStatus = jedis.hget(playerKey, "status");
+		if (hostStatus.equals("Online") && playerStatus.equals("Online")) {
+			DoubleGameRoom gameRoom = new DoubleGameRoom(hostID, playerID, word, 0, 0);
+			String key = "gameRoom:" + hostID;
+			jedis.hset(key, "hostPlayerID", String.valueOf(gameRoom.getHostPlayerID()));
+			jedis.hset(key, "invitedPlayerID", String.valueOf(gameRoom.getInvitedPlayerID()));
+			jedis.hset(key, "word", gameRoom.getWord());
+			jedis.hset(key, "hostScore", String.valueOf(gameRoom.getHostScore()));
+			jedis.hset(key, "invitedScore", String.valueOf(gameRoom.getInvitedScore()));
+			return true;
+		}else {
+			return false;
+		}
 	}
 
 	public DoubleGameRoom retrieveRoomByInvitedID(int invitedPlayerID) {
