@@ -31,7 +31,6 @@ public class RedisConnector {
 	}
 
 	public boolean updatePlayerStatus(PlayerVO player) {
-		System.out.println(123);
 		String key = "player:" + player.getPlayerID();
 		jedis.hset(key, "status", player.getStatus());
 		return true;

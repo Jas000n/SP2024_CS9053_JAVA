@@ -2,8 +2,11 @@ package NYU.SPJAVA.UI;
 
 import NYU.SPJAVA.Connector.LineDBConnector;
 import NYU.SPJAVA.Connector.PictureDBConnector;
+import NYU.SPJAVA.Connector.RedisConnector;
 import NYU.SPJAVA.DBEntity.Line;
 import NYU.SPJAVA.DBEntity.Picture;
+import NYU.SPJAVA.DBEntity.Player;
+import NYU.SPJAVA.DBEntity.PlayerVO;
 import NYU.SPJAVA.utils.Response;
 
 import javax.swing.*;
@@ -26,13 +29,28 @@ public class ReviewPanel extends JPanel {
     private List<Line> lines = new ArrayList<>(); // List to store lines
     private LineDBConnector lineDBConnector;
     private int picture_ID;
+    private RedisConnector redisConnector;
+    private Player player;
 
-    public ReviewPanel(ActionListener backListener) throws Exception {
+    public ReviewPanel(Player player, ActionListener backListener) throws Exception {
+//        System.out.println(player);
+        this.player = player;
+        redisConnector = new RedisConnector();
         setLayout(new BorderLayout());
         lineDBConnector = new LineDBConnector();
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JButton backButton = new JButton("Back to Menu");
+        ActionListener updatePlayerStatus = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+//                System.out.println(String.valueOf(player.getPlayerID()));
+//                System.out.println("player is:"+ReviewPanel.this.player);
+                redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()),player.getUname(),"Online"));
+
+            }
+        };
+        backButton.addActionListener(updatePlayerStatus);
         backButton.addActionListener(backListener);
 
         controlPanel.add(backButton);

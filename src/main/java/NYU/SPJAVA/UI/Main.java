@@ -92,7 +92,7 @@ public class Main extends JFrame {
 
         //single game button event listener
         singleGameButton.addActionListener(e -> {
-            System.out.println("clicked single game");
+//            System.out.println("clicked single game");
             Word wordToDraw = ((ArrayList<Word>) wordDBConnector.getWord(1).data).get(0);
             Game singleGame = new Game(wordToDraw, player);
             Response gameCreateRes =  gameDBConnector.createGame(singleGame);
@@ -103,10 +103,22 @@ public class Main extends JFrame {
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
+            redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()),player.getUname(),"In-Game"));
             cardPanel.add(singleGamePanel, "SingleGame");
             cardLayout.show(cardPanel, "SingleGame");
         });
-        reviewButton.addActionListener(e -> cardLayout.show(cardPanel, "Review"));
+        reviewButton.addActionListener(e -> {
+            ActionListener backListener = j -> cardLayout.show(cardPanel, "MainMenu");
+            ReviewPanel reviewPanel = null;
+            try {
+                reviewPanel = new ReviewPanel(player,backListener);
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+            cardPanel.add(reviewPanel, "Review");
+            redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()),player.getUname(),"Reviewing"));
+            cardLayout.show(cardPanel, "Review");
+        });
         singleGameButton.setEnabled(isLogin);
         reviewButton.setEnabled(isLogin);
         menuPanel.add(singleGameButton);
@@ -153,7 +165,7 @@ public class Main extends JFrame {
                     passwordText.setText("");
                     passwordText.setEditable(false);
                     Main.this.player = (Player)response.data;
-
+                    redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(Main.this.player.getPlayerID()),Main.this.player.getUname(),"Online"));
                 } else {
                     JOptionPane.showMessageDialog(null, response.msg);
                     passwordText.setText("");
@@ -173,16 +185,22 @@ public class Main extends JFrame {
             }
         });
 
-        ActionListener backListener = e -> cardLayout.show(cardPanel, "MainMenu");
-
-
-        ReviewPanel reviewPanel = new ReviewPanel(backListener);
-
         cardPanel.add(menuPanel, "MainMenu");
 
-        cardPanel.add(reviewPanel, "Review");
-
         cardLayout.show(cardPanel, "MainMenu");  // Show the main menu first
+
+        //set default close operation to null
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        //log out player on close
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+               if(Main.this.player.getPlayerID()!=null){
+                   redisConnector.playerOffline(new PlayerVO(String.valueOf(Main.this.player.getPlayerID()),Main.this.player.getUname(),"Offline"));
+               }
+                System.exit(0);
+            }
+        });
 
     }
 
