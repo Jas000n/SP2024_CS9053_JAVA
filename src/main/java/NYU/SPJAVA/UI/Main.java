@@ -37,21 +37,36 @@ public class Main extends JFrame {
         setVisible(true);
     }
     private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
-        int delay = 8000; //  refresh every 2 seconds
+        int delay = 1000; // refresh every second
         new javax.swing.Timer(delay, (e) -> {
             ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayers();
 
             DefaultListModel<String> model = new DefaultListModel<>();
             for (PlayerVO player : allOnlinePlayers) {
-                model.addElement(player.getUname());
+                model.addElement(player.getUname() + " (" + player.getStatus() + ")");
             }
             JList<String> list = new JList<>(model);
             onlinePlayer.setViewportView(list);
+
+            // Add Mouse Listener to JList
+            list.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent evt) {
+                    JList list = (JList)evt.getSource();
+                    if (evt.getClickCount() == 1) {
+                        int index = list.locationToIndex(evt.getPoint());
+                        if (index >= 0) {
+                            String item = model.getElementAt(index);
+                            System.out.println("Clicked on: " + item);
+                        }
+                    }
+                }
+            });
 
             SwingUtilities.invokeLater(() -> onlinePlayer.revalidate());
 
         }).start();
     }
+
 
 
     private void initializeUI() throws Exception {
@@ -114,12 +129,13 @@ public class Main extends JFrame {
         registerButton.setBounds(180, 80, 100, 25);
         menuPanel.add(registerButton);
 
+        //online players
         DefaultListModel<String> listModel = new DefaultListModel<>();
         JList<String> gameModesList = new JList<>(listModel);
         JScrollPane listScrollPane = new JScrollPane(gameModesList);
         listScrollPane.setPreferredSize(new Dimension(200, 100));
         menuPanel.add(listScrollPane,BorderLayout.SOUTH);
-//        this.retrieveOnlinePlayer(listScrollPane);
+        this.retrieveOnlinePlayer(listScrollPane);
 
         loginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {

@@ -22,17 +22,20 @@ public class RedisConnector {
 		Set<String> keys = jedis.keys("player:*");
 		for (String key : keys) {
 			String status = jedis.hget(key, "status");
-			if ("Online".equals(status)) {
-				PlayerVO player = new PlayerVO(jedis.hget(key, "playerID"), jedis.hget(key, "uname"), status);
-				onlinePlayers.add(player);
+			String playerID = jedis.hget(key, "playerID");
+			String uname = jedis.hget(key, "uname");
+			playerID = key.split(":")[1];
+			PlayerVO player = new PlayerVO(playerID, uname, status);
+			onlinePlayers.add(player);
 			}
-		}
+
 		return onlinePlayers;
 	}
 
 	public boolean updatePlayerStatus(PlayerVO player) {
 		String key = "player:" + player.getPlayerID();
 		jedis.hset(key, "status", player.getStatus());
+		jedis.hset(key, "uname", player.getUname());
 		return true;
 	}
 
