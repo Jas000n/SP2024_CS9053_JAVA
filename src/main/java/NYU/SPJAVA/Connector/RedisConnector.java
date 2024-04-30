@@ -5,74 +5,95 @@ import NYU.SPJAVA.DBEntity.PlayerVO;
 import redis.clients.jedis.JedisPooled;
 import NYU.SPJAVA.utils.Property;
 import NYU.SPJAVA.utils.Property.CONF;
-
 import java.util.ArrayList;
+import java.util.Set;
 
 public class RedisConnector {
+	private JedisPooled jedis;
 
-	// serialized value object in redis
-//	public 	class PlayerVO {
-//		private String playerID;
-//		private String uname;
-//		private String status;// "Online","Reviewing","In-Game","Invited"
-//	}
-//	public class DoubleGameRoom {
-//		private int hostPlayerID; //player ID of host player
-//		private int invitedPlayerID; //player ID of invited player
-//		private String word; //word for this game
-//		private int hostScore; // score host got
-//		private int invitedScore; //score the other player got
-//
-//	}
-
-	public static void main(String[] args) {
+	public RedisConnector() {
 		String url = Property.get(CONF.REDIS_URL);
 		int port = Integer.parseInt(Property.get(CONF.REDIS_PORT));
-		JedisPooled jedis = new JedisPooled(url, port);
-		jedis.set("test", "it's working!");
-		System.out.println(jedis.get("test"));
-		jedis.del("test");
-	}
-	//return all online player along with their status
-	public ArrayList<PlayerVO> getAllOnlinePlayer(){
-		ArrayList<PlayerVO> dummyResult = new ArrayList<PlayerVO>();
-		dummyResult.add(new PlayerVO("1","admin","Online"));
-		dummyResult.add(new PlayerVO("2","John-Wick","In-Game"));
-		dummyResult.add(new PlayerVO("3","Tony-Stark","Reviewing"));
-		return dummyResult;
+		this.jedis = new JedisPooled(url, port);
 	}
 
+	public ArrayList<PlayerVO> getAllOnlinePlayers() {
+		ArrayList<PlayerVO> onlinePlayers = new ArrayList<>();
+		Set<String> keys = jedis.keys("player:*");
+		for (String key : keys) {
+			String status = jedis.hget(key, "status");
+			if ("Online".equals(status)) {
+				PlayerVO player = new PlayerVO(jedis.hget(key, "playerID"), jedis.hget(key, "uname"), status);
+				onlinePlayers.add(player);
+			}
+		}
+		return onlinePlayers;
+	}
 
-	// can be (add a player online, add him in redis),(a player is reviewing, set his status to reviewing) ...
-	// he is in game, set his status to in game
-	public boolean updatePlayerStatus(PlayerVO player){
-		return false;
+	public boolean updatePlayerStatus(PlayerVO player) {
+		System.out.println(123);
+		String key = "player:" + player.getPlayerID();
+		jedis.hset(key, "status", player.getStatus());
+		return true;
 	}
-	// player log out, remove him from redis
-	public boolean playerOffline(PlayerVO player){
-		return false;
+
+	public boolean playerOffline(PlayerVO player) {
+		String key = "player:" + player.getPlayerID();
+		jedis.del(key);
+		return true;
 	}
-	// host invite a player, create a Double Game Room and put it in redis
-	public boolean hostInvitePlayer(int hostID, int playerID, String word){
-		return false;
+
+	public boolean hostInvitePlayer(int hostID, int playerID, String word) {
+		DoubleGameRoom gameRoom = new DoubleGameRoom(hostID, playerID, word, 0, 0);
+		String key = "gameRoom:" + hostID;
+		jedis.hset(key, "hostPlayerID", String.valueOf(gameRoom.getHostPlayerID()));
+		jedis.hset(key, "invitedPlayerID", String.valueOf(gameRoom.getInvitedPlayerID()));
+		jedis.hset(key, "word", gameRoom.getWord());
+		jedis.hset(key, "hostScore", String.valueOf(gameRoom.getHostScore()));
+		jedis.hset(key, "invitedScore", String.valueOf(gameRoom.getInvitedScore()));
+		return true;
 	}
-	// check player's invited in which game
-	public DoubleGameRoom retrieveRoomByInvitedID(int invitedPlayerID){
+
+	public DoubleGameRoom retrieveRoomByInvitedID(int invitedPlayerID) {
+		Set<String> keys = jedis.keys("gameRoom:*");
+		for (String key : keys) {
+			if (String.valueOf(invitedPlayerID).equals(jedis.hget(key, "invitedPlayerID"))) {
+				return new DoubleGameRoom(
+						Integer.parseInt(jedis.hget(key, "hostPlayerID")),
+						invitedPlayerID,
+						jedis.hget(key, "word"),
+						Integer.parseInt(jedis.hget(key, "hostScore")),
+						Integer.parseInt(jedis.hget(key, "invitedScore"))
+				);
+			}
+		}
 		return null;
 	}
-	//update double game room(by host id)
-	public boolean updateGameRoom(DoubleGameRoom gameRoom){
-		return false;
+
+	public boolean updateGameRoom(DoubleGameRoom gameRoom) {
+		String key = "gameRoom:" + gameRoom.getHostPlayerID();
+		jedis.hset(key, "hostScore", String.valueOf(gameRoom.getHostScore()));
+		jedis.hset(key, "invitedScore", String.valueOf(gameRoom.getInvitedScore()));
+		return true;
 	}
-	//remove double game( by host id)
-	public boolean removeGameRoom(DoubleGameRoom gameRoom){
-		return false;
+
+	public boolean removeGameRoom(DoubleGameRoom gameRoom) {
+		String key = "gameRoom:" + gameRoom.getHostPlayerID();
+		jedis.del(key);
+		return true;
 	}
-	//retrieve double game room(by host id)
-	public DoubleGameRoom retrieveRoomByHostID(int invitedPlayerID){
+
+	public DoubleGameRoom retrieveRoomByHostID(int hostPlayerID) {
+		String key = "gameRoom:" + hostPlayerID;
+		if (jedis.exists(key)) {
+			return new DoubleGameRoom(
+					hostPlayerID,
+					Integer.parseInt(jedis.hget(key, "invitedPlayerID")),
+					jedis.hget(key, "word"),
+					Integer.parseInt(jedis.hget(key, "hostScore")),
+					Integer.parseInt(jedis.hget(key, "invitedScore"))
+			);
+		}
 		return null;
 	}
-
-
 }
-
