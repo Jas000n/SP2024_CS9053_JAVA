@@ -12,6 +12,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
@@ -22,105 +23,84 @@ public class Main extends JFrame {
     boolean isLogin = false;
     Player player;
     RedisConnector redisConnector;
+    WordDBConnector wordDBConnector;
+    GameDBConnector gameDBConnector;
 
     public Main() throws Exception {
         setTitle("Picasso");
         setSize(800, 600);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
-        setLocationRelativeTo(null);  // Center the frame
+        setLocationRelativeTo(null);
         redisConnector = new RedisConnector();
+        wordDBConnector = new WordDBConnector();
+        gameDBConnector = new GameDBConnector();
         initializeUI();
         add(cardPanel);
         setVisible(true);
     }
-//    private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
-//        int delay = 1000; // refresh every second
-//        new javax.swing.Timer(delay, (e) -> {
-//            if  (player!=null&&player.getPlayerID()!=null) {
-//                DoubleGameRoom doubleGameRoom = redisConnector.retrieveRoomByInvitedID(player.getPlayerID());
-//                String msg = "You are invited in a double game with "+doubleGameRoom.getHostPlayerID()+" with word: "+doubleGameRoom.getWord();
-//                JOptionPane.showMessageDialog(null, msg);
-//            }
-//            ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayers();
-//            DefaultListModel<String> model = new DefaultListModel<>();
-//            for (PlayerVO player : allOnlinePlayers) {
-//                model.addElement(player.getPlayerID()+":"+player.getUname() + " (" + player.getStatus() + ")");
-//            }
-//            JList<String> list = new JList<>(model);
-//            onlinePlayer.setViewportView(list);
-//
-//            // Add Mouse Listener to JList
-//            list.addMouseListener(new MouseAdapter() {
-//                public void mouseClicked(MouseEvent evt) {
-//                    JList list = (JList)evt.getSource();
-//                    if (evt.getClickCount() == 1) {
-//                        int index = list.locationToIndex(evt.getPoint());
-//                        if (index >= 0) {
-//                            String item = model.getElementAt(index);
-//                            int hostID = Main.this.player.getPlayerID();
-//                            int invitedID = Integer.parseInt(item.split(":")[0]);
-//                            if(hostID!=invitedID){
-//                                System.out.print(hostID+" invited "+invitedID+" in a double game ");
-//                                boolean result = redisConnector.hostInvitePlayer(hostID, invitedID, "test");
-//                                if(result){
-//                                    System.out.println("and succeeded!");
-//                                }else {
-//                                    System.out.println("and failed");
-//                                }
-//                            }
-//
-//
-//
-//                        }
-//                    }
-//                }
-//            });
-//
-//            SwingUtilities.invokeLater(() -> onlinePlayer.revalidate());
-//
-//        }).start();
-//    }
-private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
-    int delay = 1000; // refresh every second
-    ArrayList<PlayerVO> currentPlayers = new ArrayList<>(); // To track changes in player list
-    AtomicReference<String> lastInvitedMsg = new AtomicReference<>(); // To avoid repetitive messages
 
-    new javax.swing.Timer(delay, (e) -> {
-        ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayers();
-        if (!allOnlinePlayers.equals(currentPlayers)) {
-            currentPlayers.clear();
-            currentPlayers.addAll(allOnlinePlayers);
-            DefaultListModel<String> model = new DefaultListModel<>();
-            for (PlayerVO player : allOnlinePlayers) {
-                model.addElement(player.getPlayerID() + ":" + player.getUname() + " (" + player.getStatus() + ")");
+    private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
+        int delay = 1000; // refresh every second
+        ArrayList<PlayerVO> currentPlayers = new ArrayList<>();
+        AtomicReference<String> lastInvitedMsg = new AtomicReference<>();
+
+        new Timer(delay, (e) -> {
+            ArrayList<PlayerVO> allOnlinePlayers = redisConnector.getAllOnlinePlayers();
+            if (!allOnlinePlayers.equals(currentPlayers)) {
+                currentPlayers.clear();
+                currentPlayers.addAll(allOnlinePlayers);
+                DefaultListModel<String> model = new DefaultListModel<>();
+                for (PlayerVO player : allOnlinePlayers) {
+                    model.addElement(player.getPlayerID() + ":" + player.getUname() + " (" + player.getStatus() + ")");
+                }
+
+                SwingUtilities.invokeLater(() -> {
+                    JList<String> list = new JList<>(model);
+                    onlinePlayer.setViewportView(list);
+                    list.addMouseListener(new MouseAdapter() {
+                        public void mouseClicked(MouseEvent evt) {
+                            handleMouseClick(evt, list, model);
+                        }
+                    });
+                    onlinePlayer.revalidate();
+                });
             }
 
-            SwingUtilities.invokeLater(() -> {
-                JList<String> list = new JList<>(model);
-                onlinePlayer.setViewportView(list);
-                list.addMouseListener(new MouseAdapter() {
-                    public void mouseClicked(MouseEvent evt) {
-                        handleMouseClick(evt, list, model);
-                    }
-                });
-                onlinePlayer.revalidate();
-            });
-        }
+            if (player != null && player.getPlayerID() != null) {
+                DoubleGameRoom doubleGameRoom = redisConnector.retrieveRoomByInvitedID(player.getPlayerID());
+                if (doubleGameRoom != null) {
+                    String msg = "You are invited in a double game with player " + doubleGameRoom.getHostPlayerID() + " with word: " + doubleGameRoom.getWord();
+                    if (!msg.equals(lastInvitedMsg.get())) {
+                        int result = JOptionPane.showConfirmDialog(Main.this, msg, "Invitation", JOptionPane.OK_CANCEL_OPTION);
+                        if (result == JOptionPane.OK_OPTION) {
+                            acceptInvitation(doubleGameRoom);
+                        } else if (result == JOptionPane.OK_CANCEL_OPTION) {
+                            System.out.println("player rejected the invitation!");
+                            redisConnector.removeGameRoom(doubleGameRoom);
 
-        if(player!=null && player.getPlayerID()!=null){
-            DoubleGameRoom doubleGameRoom = redisConnector.retrieveRoomByInvitedID(player.getPlayerID());
-            if (doubleGameRoom != null) {
-                String msg = "You are invited in a double game with " + doubleGameRoom.getHostPlayerID() + " with word: " + doubleGameRoom.getWord();
-                if (!msg.equals(lastInvitedMsg)) {
-                    lastInvitedMsg.set(msg);
-                    JOptionPane.showMessageDialog(null, msg);
+                        }
+                        lastInvitedMsg.set(msg);
+                    }
                 }
             }
-        }
+        }).start();
+    }
 
-    }).start();
-}
+    private void acceptInvitation(DoubleGameRoom doubleGameRoom) {
+        try {
+            Word word = wordDBConnector.getWordByString(doubleGameRoom.getWord());
+            Game doubleGame = new Game(word, player);
+            Response gameCreateRes = gameDBConnector.createGame(doubleGame);
+            doubleGame = (Game) gameCreateRes.data;
+            DrawPanel singleGamePanel = new DrawPanel(doubleGame);
+            redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()), player.getUname(), "In-Game"));
+            cardPanel.add(singleGamePanel, "SingleGame");
+            cardLayout.show(cardPanel, "SingleGame");
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
+    }
 
     private void handleMouseClick(MouseEvent evt, JList<String> list, DefaultListModel<String> model) {
         if (evt.getClickCount() == 1) {
@@ -131,7 +111,8 @@ private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
                 int invitedID = Integer.parseInt(item.split(":")[0]);
                 if (hostID != invitedID) {
                     System.out.print(hostID + " invited " + invitedID + " in a double game ");
-                    boolean result = redisConnector.hostInvitePlayer(hostID, invitedID, "test");
+                    String word = ((ArrayList<Word>) (wordDBConnector.getWord(1).data)).get(0).word;
+                    boolean result = redisConnector.hostInvitePlayer(hostID, invitedID, word);
                     if (result) {
                         System.out.println("and succeeded!");
                     } else {
@@ -142,9 +123,6 @@ private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
         }
     }
 
-
-
-
     private void initializeUI() throws Exception {
         PlayerDBConnector playerDBConnector = new PlayerDBConnector();
         WordDBConnector wordDBConnector = new WordDBConnector();
@@ -154,41 +132,42 @@ private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
         JButton singleGameButton = new JButton("Single Game");
         JButton reviewButton = new JButton("Review");
 
-        //single game button event listener
+        // Single game button event listener
         singleGameButton.addActionListener(e -> {
-//            System.out.println("clicked single game");
             Word wordToDraw = ((ArrayList<Word>) wordDBConnector.getWord(1).data).get(0);
             Game singleGame = new Game(wordToDraw, player);
-            Response gameCreateRes =  gameDBConnector.createGame(singleGame);
-            singleGame = (Game)gameCreateRes.data;
+            Response gameCreateRes = gameDBConnector.createGame(singleGame);
+            singleGame = (Game) gameCreateRes.data;
             DrawPanel singleGamePanel = null;
             try {
                 singleGamePanel = new DrawPanel(singleGame);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
-            redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()),player.getUname(),"In-Game"));
+            redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()), player.getUname(), "In-Game"));
             cardPanel.add(singleGamePanel, "SingleGame");
             cardLayout.show(cardPanel, "SingleGame");
         });
+
         reviewButton.addActionListener(e -> {
             ActionListener backListener = j -> cardLayout.show(cardPanel, "MainMenu");
             ReviewPanel reviewPanel = null;
             try {
-                reviewPanel = new ReviewPanel(player,backListener);
+                reviewPanel = new ReviewPanel(player, backListener);
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
             cardPanel.add(reviewPanel, "Review");
-            redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()),player.getUname(),"Reviewing"));
+            redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()), player.getUname(), "Reviewing"));
             cardLayout.show(cardPanel, "Review");
         });
+
         singleGameButton.setEnabled(isLogin);
         reviewButton.setEnabled(isLogin);
         menuPanel.add(singleGameButton);
         menuPanel.add(reviewButton);
 
-        //text field for uname and password
+        // Text fields for username and password
         JTextField unameText = new JTextField(20);
         unameText.setBounds(100, 20, 165, 25);
         menuPanel.add(unameText);
@@ -205,12 +184,12 @@ private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
         registerButton.setBounds(180, 80, 100, 25);
         menuPanel.add(registerButton);
 
-        //online players
+        // Online players
         DefaultListModel<String> listModel = new DefaultListModel<>();
         JList<String> gameModesList = new JList<>(listModel);
         JScrollPane listScrollPane = new JScrollPane(gameModesList);
         listScrollPane.setPreferredSize(new Dimension(200, 100));
-        menuPanel.add(listScrollPane,BorderLayout.SOUTH);
+        menuPanel.add(listScrollPane, BorderLayout.SOUTH);
         this.retrieveOnlinePlayer(listScrollPane);
 
         loginButton.addActionListener(new ActionListener() {
@@ -229,13 +208,12 @@ private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
                     unameText.setEditable(false);
                     passwordText.setText("");
                     passwordText.setEditable(false);
-                    Main.this.player = (Player)response.data;
-                    redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(Main.this.player.getPlayerID()),Main.this.player.getUname(),"Online"));
+                    Main.this.player = (Player) response.data;
+                    redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(Main.this.player.getPlayerID()), Main.this.player.getUname(), "Online"));
                 } else {
                     JOptionPane.showMessageDialog(null, response.msg);
                     passwordText.setText("");
                 }
-
             }
         });
 
@@ -243,7 +221,7 @@ private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
             public void actionPerformed(ActionEvent e) {
                 String username = unameText.getText();
                 char[] password = passwordText.getPassword();
-                Response response= playerDBConnector.register(new Player(username,Hashing.sha256().hashString(new String(password), StandardCharsets.UTF_8).toString()));
+                Response response = playerDBConnector.register(new Player(username, Hashing.sha256().hashString(new String(password), StandardCharsets.UTF_8).toString()));
                 Arrays.fill(password, '0');
                 String msg = response.msg;
                 JOptionPane.showMessageDialog(null, msg);
@@ -254,22 +232,20 @@ private void retrieveOnlinePlayer(JScrollPane onlinePlayer) {
 
         cardLayout.show(cardPanel, "MainMenu");  // Show the main menu first
 
-        //set default close operation to null
+        // Set default close operation to do nothing
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
-        //log out player on close
+        // Log out player on close
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-               if(Main.this.player!=null&&Main.this.player.getPlayerID()!=null){
-                   System.out.println(Main.this.player);
-                   redisConnector.playerOffline(new PlayerVO(String.valueOf(Main.this.player.getPlayerID()),Main.this.player.getUname(),"Offline"));
-               }
+                if (Main.this.player != null && Main.this.player.getPlayerID() != null) {
+                    System.out.println(Main.this.player);
+                    redisConnector.playerOffline(new PlayerVO(String.valueOf(Main.this.player.getPlayerID()), Main.this.player.getUname(), "Offline"));
+                }
                 System.exit(0);
             }
         });
-
     }
-
 
     public static void main(String[] args) throws Exception {
         new Main();
