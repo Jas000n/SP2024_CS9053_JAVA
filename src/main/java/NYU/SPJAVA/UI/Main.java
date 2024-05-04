@@ -15,6 +15,7 @@ import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class Main extends JFrame {
@@ -60,7 +61,7 @@ public class Main extends JFrame {
                     onlinePlayer.setViewportView(list);
                     list.addMouseListener(new MouseAdapter() {
                         public void mouseClicked(MouseEvent evt) {
-                            handleMouseClick(evt, list, model);
+                            invitePlayerMouseClick(evt, list, model);
                         }
                     });
                     onlinePlayer.revalidate();
@@ -89,6 +90,8 @@ public class Main extends JFrame {
 
     private void acceptInvitation(DoubleGameRoom doubleGameRoom) {
         try {
+            doubleGameRoom.setStatus("accepted");
+            redisConnector.updateGameRoom(doubleGameRoom);
             Word word = wordDBConnector.getWordByString(doubleGameRoom.getWord());
             Game doubleGame = new Game(word, player);
             Response gameCreateRes = gameDBConnector.createGame(doubleGame);
@@ -102,7 +105,7 @@ public class Main extends JFrame {
         }
     }
 
-    private void handleMouseClick(MouseEvent evt, JList<String> list, DefaultListModel<String> model) {
+    private void invitePlayerMouseClick(MouseEvent evt, JList<String> list, DefaultListModel<String> model) {
         if (evt.getClickCount() == 1) {
             int index = list.locationToIndex(evt.getPoint());
             if (index >= 0) {
@@ -115,6 +118,37 @@ public class Main extends JFrame {
                     boolean result = redisConnector.hostInvitePlayer(hostID, invitedID, word);
                     if (result) {
                         System.out.println("and succeeded!");
+                        int delay = 1000;
+                        Timer checkingAcceptionTimer = null;
+                        Timer finalCheckingAcceptionTimer = checkingAcceptionTimer;
+                        checkingAcceptionTimer = new Timer(delay, (e) -> {
+                            //check every second, whether the invited player accepted
+                            DoubleGameRoom doubleGameRoom = redisConnector.retrieveRoomByHostID(hostID);
+                            if (doubleGameRoom != null && Objects.equals(doubleGameRoom.getStatus(), "accepted")) {
+                                //the other player accepted that invitation
+                                try {
+                                    Word word1 = wordDBConnector.getWordByString(doubleGameRoom.getWord());
+                                    Game doubleGame = new Game(word1,Main.this.player);
+                                    Response gameCreateRes = gameDBConnector.createGame(doubleGame);
+                                    doubleGame= (Game) gameCreateRes.data;
+                                    DrawPanel singleGamePanel = null;
+                                    try {
+                                        singleGamePanel = new DrawPanel(doubleGame);
+                                    } catch (Exception ex) {
+                                        throw new RuntimeException(ex);
+                                    }
+                                    redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()), player.getUname(), "In-Game"));
+                                    cardPanel.add(singleGamePanel, "SingleGame");
+                                    cardLayout.show(cardPanel, "SingleGame");
+                                    //stop timer here
+                                    finalCheckingAcceptionTimer.stop();
+                                } catch (SQLException ex) {
+                                    throw new RuntimeException(ex);
+                                }
+                            }
+                        });
+
+                        checkingAcceptionTimer.start();
                     } else {
                         System.out.println("and failed");
                     }

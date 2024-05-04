@@ -53,13 +53,14 @@ public class RedisConnector {
 		String hostStatus = jedis.hget(hostKey, "status");
 		String playerStatus = jedis.hget(playerKey, "status");
 		if (hostStatus.equals("Online") && playerStatus.equals("Online")) {
-			DoubleGameRoom gameRoom = new DoubleGameRoom(hostID, playerID, word, 0, 0);
+			DoubleGameRoom gameRoom = new DoubleGameRoom(hostID, playerID, word, 0, 0,"init");
 			String key = "gameRoom:" + hostID;
 			jedis.hset(key, "hostPlayerID", String.valueOf(gameRoom.getHostPlayerID()));
 			jedis.hset(key, "invitedPlayerID", String.valueOf(gameRoom.getInvitedPlayerID()));
 			jedis.hset(key, "word", gameRoom.getWord());
 			jedis.hset(key, "hostScore", String.valueOf(gameRoom.getHostScore()));
 			jedis.hset(key, "invitedScore", String.valueOf(gameRoom.getInvitedScore()));
+			jedis.hset(key, "status", gameRoom.getStatus());
 			return true;
 		}else {
 			return false;
@@ -75,7 +76,8 @@ public class RedisConnector {
 						invitedPlayerID,
 						jedis.hget(key, "word"),
 						Integer.parseInt(jedis.hget(key, "hostScore")),
-						Integer.parseInt(jedis.hget(key, "invitedScore"))
+						Integer.parseInt(jedis.hget(key, "invitedScore")),
+						jedis.hget(key, "status")
 				);
 			}
 		}
@@ -86,6 +88,7 @@ public class RedisConnector {
 		String key = "gameRoom:" + gameRoom.getHostPlayerID();
 		jedis.hset(key, "hostScore", String.valueOf(gameRoom.getHostScore()));
 		jedis.hset(key, "invitedScore", String.valueOf(gameRoom.getInvitedScore()));
+		jedis.hset(key, "status", gameRoom.getStatus());
 		return true;
 	}
 
@@ -103,7 +106,8 @@ public class RedisConnector {
 					Integer.parseInt(jedis.hget(key, "invitedPlayerID")),
 					jedis.hget(key, "word"),
 					Integer.parseInt(jedis.hget(key, "hostScore")),
-					Integer.parseInt(jedis.hget(key, "invitedScore"))
+					Integer.parseInt(jedis.hget(key, "invitedScore")),
+					jedis.hget(key, "status")
 			);
 		}
 		return null;
