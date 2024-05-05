@@ -9,6 +9,7 @@ import NYU.SPJAVA.utils.ImageToBase64;
 import NYU.SPJAVA.utils.Property;
 import NYU.SPJAVA.utils.Property.CONF;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class ChatGPTConnector {
@@ -83,28 +84,33 @@ public class ChatGPTConnector {
         }
     }
     public static ChatGPTResponse parseResponse(String responseBody) {
-        JSONObject responseJson = new JSONObject(responseBody);
-        JSONArray choices = responseJson.getJSONArray("choices");
+        try {
+            JSONObject responseJson = new JSONObject(responseBody);
+            JSONArray choices = responseJson.getJSONArray("choices");
 
-        if (!choices.isEmpty()) {
-            JSONObject firstChoice = choices.getJSONObject(0);
-            JSONObject message = firstChoice.getJSONObject("message");
-            String contentJsonString = message.getString("content");
+            if (choices.length() > 0) { // Use length() instead of isEmpty() for JSONArray
+                JSONObject firstChoice = choices.getJSONObject(0);
+                JSONObject message = firstChoice.getJSONObject("message");
+                String contentJsonString = message.getString("content");
 
-            // parse json
-            JSONObject contentJson = new JSONObject(contentJsonString);
-            String score = contentJson.getString("score");
-            String comment = contentJson.getString("comment");
+                // parse json
+                JSONObject contentJson = new JSONObject(contentJsonString);
+                String score = contentJson.getString("score");
+                String comment = contentJson.getString("comment");
 
-            // put score and comment in a entity class
-            ChatGPTResponse contentEntity = new ChatGPTResponse(score, comment);
-            System.out.println(contentEntity);
-            return contentEntity;
-        }else {
-            return new ChatGPTResponse("0","Something went wrong, cannot connect to ChatGPT");
+                // put score and comment in an entity class
+                ChatGPTResponse contentEntity = new ChatGPTResponse(score, comment);
+                System.out.println(contentEntity);
+                return contentEntity;
+            } else {
+                return new ChatGPTResponse("0", "No choices available in the response.");
+            }
+        } catch (JSONException e) {
+            System.err.println("JSON parsing error: " + e.getMessage());
+            return new ChatGPTResponse("60", "ChatGPT went wrong, not our problem!");
         }
-
     }
+
 
     public static void main(String[] args) throws IOException {
 
