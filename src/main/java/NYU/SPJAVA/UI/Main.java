@@ -202,11 +202,14 @@ public class Main extends JFrame {
         menuPanel.add(reviewButton);
 
         // Text fields for username and password
-        JTextField unameText = new JTextField(20);
+        JLabel uname = new JLabel("User Name:");
+        menuPanel.add(uname);
+        JTextField unameText = new JTextField(10);
         unameText.setBounds(100, 20, 165, 25);
         menuPanel.add(unameText);
-
-        JPasswordField passwordText = new JPasswordField(20);
+        JLabel password = new JLabel("Password:");
+        menuPanel.add(password);
+        JPasswordField passwordText = new JPasswordField(10);
         passwordText.setBounds(100, 50, 165, 25);
         menuPanel.add(passwordText);
 
