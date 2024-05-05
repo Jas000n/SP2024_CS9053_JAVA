@@ -273,7 +273,7 @@ public class Main extends JFrame {
             @Override
             public void windowClosing(WindowEvent e) {
                 if (Main.this.player != null && Main.this.player.getPlayerID() != null) {
-                    System.out.println(Main.this.player);
+                    //System.out.println(Main.this.player);
                     redisConnector.playerOffline(new PlayerVO(String.valueOf(Main.this.player.getPlayerID()), Main.this.player.getUname(), "Offline"));
                 }
                 System.exit(0);

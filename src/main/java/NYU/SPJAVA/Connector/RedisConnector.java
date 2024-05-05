@@ -61,6 +61,7 @@ public class RedisConnector {
 			jedis.hset(key, "hostScore", String.valueOf(gameRoom.getHostScore()));
 			jedis.hset(key, "invitedScore", String.valueOf(gameRoom.getInvitedScore()));
 			jedis.hset(key, "status", gameRoom.getStatus());
+			jedis.hset(key, "numOfCheck", String.valueOf(gameRoom.getNumOfCheck()));
 			return true;
 		}else {
 			return false;
@@ -77,7 +78,8 @@ public class RedisConnector {
 						jedis.hget(key, "word"),
 						Integer.parseInt(jedis.hget(key, "hostScore")),
 						Integer.parseInt(jedis.hget(key, "invitedScore")),
-						jedis.hget(key, "status")
+						jedis.hget(key, "status"),
+						Integer.parseInt(jedis.hget(key, "numOfCheck"))
 				);
 			}
 		}
@@ -89,6 +91,7 @@ public class RedisConnector {
 		jedis.hset(key, "hostScore", String.valueOf(gameRoom.getHostScore()));
 		jedis.hset(key, "invitedScore", String.valueOf(gameRoom.getInvitedScore()));
 		jedis.hset(key, "status", gameRoom.getStatus());
+		jedis.hset(key,"numOfCheck",String.valueOf(gameRoom.getNumOfCheck()));
 		return true;
 	}
 
@@ -107,7 +110,8 @@ public class RedisConnector {
 					jedis.hget(key, "word"),
 					Integer.parseInt(jedis.hget(key, "hostScore")),
 					Integer.parseInt(jedis.hget(key, "invitedScore")),
-					jedis.hget(key, "status")
+					jedis.hget(key, "status"),
+					Integer.parseInt(jedis.hget(key,"numOfCheck"))
 			);
 		}
 		return null;

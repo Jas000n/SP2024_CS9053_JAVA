@@ -7,6 +7,8 @@ public class DoubleGameRoom {
     private String word; //word for this game
     private int hostScore; // score host got
     private String status; //status of this game room
+    private int invitedScore; //score the other player got
+    private int numOfCheck;//how many player retrieved the result
 
     public String getStatus() {
         return status;
@@ -63,8 +65,27 @@ public class DoubleGameRoom {
         this.hostScore = hostScore;
         this.invitedScore = invitedScore;
         this.status = status;
+        this.numOfCheck = 0;
     }
 
-    private int invitedScore; //score the other player got
+    public DoubleGameRoom(int hostPlayerID, int invitedPlayerID, String word, int hostScore, int invitedScore,String status,  int numOfCheck) {
+        this.hostPlayerID = hostPlayerID;
+        this.invitedPlayerID = invitedPlayerID;
+        this.word = word;
+        this.hostScore = hostScore;
+        this.status = status;
+        this.invitedScore = invitedScore;
+        this.numOfCheck = numOfCheck;
+    }
 
+    public int getNumOfCheck() {
+        return numOfCheck;
+    }
+
+    public void setNumOfCheck(int numOfCheck) {
+        this.numOfCheck = numOfCheck;
+    }
+    public void numOfCheckPlusPlus(){
+        this.numOfCheck+=1;
+    }
 }
