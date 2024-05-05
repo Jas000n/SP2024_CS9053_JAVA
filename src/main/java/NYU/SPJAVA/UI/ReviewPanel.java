@@ -2,8 +2,11 @@ package NYU.SPJAVA.UI;
 
 import NYU.SPJAVA.Connector.LineDBConnector;
 import NYU.SPJAVA.Connector.PictureDBConnector;
+import NYU.SPJAVA.Connector.RedisConnector;
 import NYU.SPJAVA.DBEntity.Line;
 import NYU.SPJAVA.DBEntity.Picture;
+import NYU.SPJAVA.DBEntity.Player;
+import NYU.SPJAVA.DBEntity.PlayerVO;
 import NYU.SPJAVA.utils.Response;
 
 import javax.swing.*;
@@ -14,6 +17,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
 public class ReviewPanel extends JPanel {
@@ -25,13 +29,28 @@ public class ReviewPanel extends JPanel {
     private List<Line> lines = new ArrayList<>(); // List to store lines
     private LineDBConnector lineDBConnector;
     private int picture_ID;
+    private RedisConnector redisConnector;
+    private Player player;
 
-    public ReviewPanel(ActionListener backListener) throws Exception {
+    public ReviewPanel(Player player, ActionListener backListener) throws Exception {
+//        System.out.println(player);
+        this.player = player;
+        redisConnector = new RedisConnector();
         setLayout(new BorderLayout());
         lineDBConnector = new LineDBConnector();
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JButton backButton = new JButton("Back to Menu");
+        ActionListener updatePlayerStatus = new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+//                System.out.println(String.valueOf(player.getPlayerID()));
+//                System.out.println("player is:"+ReviewPanel.this.player);
+                redisConnector.updatePlayerStatus(new PlayerVO(String.valueOf(player.getPlayerID()),player.getUname(),"Online"));
+
+            }
+        };
+        backButton.addActionListener(updatePlayerStatus);
         backButton.addActionListener(backListener);
 
         controlPanel.add(backButton);
@@ -61,7 +80,6 @@ public class ReviewPanel extends JPanel {
                 picture_ID = Integer.parseInt(textField.getText());
                 ArrayList<Line> drawnLine = getDrawnLine();
                 paintLines(drawingArea.getGraphics(),drawnLine);
-                JOptionPane.showMessageDialog(null, "Finished!");
             }
         });
         controlPanel.add(submitButton);
@@ -83,31 +101,43 @@ public class ReviewPanel extends JPanel {
     private void paintLines(Graphics g, ArrayList<Line> lines) {
         lines.sort(Comparator.comparingLong(Line::getTime));
 
-        long prevTime = 0;
-        for (Line line : lines) {
-            long currentTime = line.getTime();
-            if (prevTime != 0) {
-                long timeDiff = (currentTime - prevTime)/5;
-                try {
-                    Thread.sleep(timeDiff);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+        Iterator<Line> iterator = lines.iterator();
+        final long[] prevTime = {0};
+
+        Timer timer = new Timer(0, null);
+        timer.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (!iterator.hasNext()) {
+                    timer.stop();
+
+                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(null, "Finished!"));
+                    return;
                 }
+
+                Line line = iterator.next();
+                long currentTime = line.getTime();
+                if (prevTime[0] != 0) {
+                    timer.setDelay((int) ((currentTime - prevTime[0]) / 5));
+                }
+                prevTime[0] = currentTime;
+
+                Color tmp = new Color(line.getColor_r(), line.getColor_g(), line.getColor_b());
+                if (line.isIs_eraser()) {
+                    g.setColor(Color.WHITE);
+                } else {
+                    g.setColor(tmp);
+                }
+
+                ((Graphics2D) g).setStroke(new BasicStroke(line.getPen_size()));
+                g.drawLine(line.getPre_x(), line.getPre_y(), line.getX(), line.getY());
             }
+        });
 
-            Color tmp = new Color(line.getColor_r(), line.getColor_g(), line.getColor_b());
-            if(line.isIs_eraser()){
-                g.setColor(Color.WHITE);
-            }else {
-                g.setColor(tmp);
-            }
-
-            ((Graphics2D) g).setStroke(new BasicStroke(line.getPen_size()));
-            g.drawLine(line.getPre_x(), line.getPre_y(), line.getX(), line.getY());
-
-            prevTime = currentTime;
-        }
+        timer.setInitialDelay(0);
+        timer.start();
     }
+
+
     public  ArrayList<Line> getDrawnLine() {
         LineDBConnector dbConnector = this.lineDBConnector;
         Picture tmp = new Picture();
