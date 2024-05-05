@@ -3,6 +3,7 @@
 #+Author: Rafik Saad, Shunyu Yao
 #+Email: <rs7983@nyu.edu>, <sy3913@nyu.edu>
 Date: May 5, 2024
+
 Author: Rafik Saad, Shunyu Yao
 
 * Picasso Documentation

@@ -3,7 +3,7 @@
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
 <head>
-<!-- 2024-05-05 Sun 15:10 -->
+<!-- 2024-05-05 Sun 15:35 -->
 <meta http-equiv="Content-Type" content="text/html;charset=utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Java Final Project: Picasso</title>
@@ -198,21 +198,24 @@
 <h1 class="title">Java Final Project: Picasso</h1>
 <p>
 Date: May 5, 2024
+</p>
+
+<p>
 Author: Rafik Saad, Shunyu Yao
 </p>
 
-<div id="outline-container-org0028605" class="outline-2">
-<h2 id="org0028605">Picasso Documentation</h2>
-<div class="outline-text-2" id="text-org0028605">
+<div id="outline-container-orgfe02715" class="outline-2">
+<h2 id="orgfe02715">Picasso Documentation</h2>
+<div class="outline-text-2" id="text-orgfe02715">
 <p>
 This document will explain how to setup and run Picasso locally
 and will also explain the overall design of the game
 </p>
 </div>
 
-<div id="outline-container-org5b8a1cd" class="outline-3">
-<h3 id="org5b8a1cd">What is picasso?</h3>
-<div class="outline-text-3" id="text-org5b8a1cd">
+<div id="outline-container-org9ebe494" class="outline-3">
+<h3 id="org9ebe494">What is picasso?</h3>
+<div class="outline-text-3" id="text-org9ebe494">
 <p>
 Picasso is an AI powered drawing game.
 Players are given a blank canvas and a random scene to draw. The drawings are then graded by ChatGPT4.
@@ -225,9 +228,9 @@ In dual game mode, a player can send a challenge to another player for a showdow
 </div>
 </div>
 
-<div id="outline-container-org08740fb" class="outline-3">
-<h3 id="org08740fb">Environment Setup</h3>
-<div class="outline-text-3" id="text-org08740fb">
+<div id="outline-container-org060b1d9" class="outline-3">
+<h3 id="org060b1d9">Environment Setup</h3>
+<div class="outline-text-3" id="text-org060b1d9">
 <p>
 To run picasso locally, you'll need the following prerequisites:
 </p>
@@ -265,9 +268,9 @@ That's it, now you're ready to play, simply run <a href="https://github.com/Jas0
 </div>
 </div>
 
-<div id="outline-container-orgf9efeee" class="outline-3">
-<h3 id="orgf9efeee">Game Demo</h3>
-<div class="outline-text-3" id="text-orgf9efeee">
+<div id="outline-container-org5ad3986" class="outline-3">
+<h3 id="org5ad3986">Game Demo</h3>
+<div class="outline-text-3" id="text-org5ad3986">
 <p>
 Download the game demo video <a href="./static/demo/main_demo.mp4">here</a> to see the game in action!
 </p>
@@ -289,15 +292,15 @@ The next sections will go over the overall design in more details.
 </p>
 </div>
 </div>
-<div id="outline-container-org48dd416" class="outline-3">
-<h3 id="org48dd416">Backend Design Overview</h3>
-<div class="outline-text-3" id="text-org48dd416">
+<div id="outline-container-orgcebb1ff" class="outline-3">
+<h3 id="orgcebb1ff">Backend Design Overview</h3>
+<div class="outline-text-3" id="text-orgcebb1ff">
 <p>
 After running the CreateAllTables script above, your back-end should look like this:
 </p>
 
 
-<div id="org0b7581e" class="figure">
+<div id="org11ce61e" class="figure">
 <p><img src="./static/DB/picasso_erd.png" alt="picasso_erd.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 1: </span>Picasso ERD Diagram</p>
@@ -353,9 +356,9 @@ chose by the DB, not Java. This guarantees ACID transactions and minimizes the r
 </p>
 </div>
 
-<div id="outline-container-org3f36e54" class="outline-4">
-<h4 id="org3f36e54">The Word Table</h4>
-<div class="outline-text-4" id="text-org3f36e54">
+<div id="outline-container-orgc3b94d9" class="outline-4">
+<h4 id="orgc3b94d9">The Word Table</h4>
+<div class="outline-text-4" id="text-orgc3b94d9">
 <p>
 The words tables contains scenes for drawing, a scene is chosen at random for each game
 </p>
@@ -365,7 +368,7 @@ Here is a sample table with few words/scenes:
 </p>
 
 
-<div id="orgc5521c4" class="figure">
+<div id="orga3038b8" class="figure">
 <p><img src="./static/DB/word.png" alt="word.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 2: </span>Picasso Word Table</p>
@@ -373,9 +376,9 @@ Here is a sample table with few words/scenes:
 </div>
 </div>
 
-<div id="outline-container-org4c6f9c7" class="outline-4">
-<h4 id="org4c6f9c7">The Player Table</h4>
-<div class="outline-text-4" id="text-org4c6f9c7">
+<div id="outline-container-orgb5f2d1c" class="outline-4">
+<h4 id="orgb5f2d1c">The Player Table</h4>
+<div class="outline-text-4" id="text-orgb5f2d1c">
 <p>
 When players register, their information is stored here. The password is hashed using Sha256 algorithm
 </p>
@@ -385,7 +388,7 @@ Here is a sample with two registered players
 </p>
 
 
-<div id="org2d4ec08" class="figure">
+<div id="org9b8e436" class="figure">
 <p><img src="./static/DB/player.png" alt="player.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 3: </span>Picasso Player Table</p>
@@ -394,16 +397,16 @@ Here is a sample with two registered players
 </div>
 
 
-<div id="outline-container-orgfb87726" class="outline-4">
-<h4 id="orgfb87726">The Game table</h4>
-<div class="outline-text-4" id="text-orgfb87726">
+<div id="outline-container-org003dfcd" class="outline-4">
+<h4 id="org003dfcd">The Game table</h4>
+<div class="outline-text-4" id="text-org003dfcd">
 <p>
 Once a player creates a game, it's saved in the game table, here is a sample game created by the player: John Wick.
 Note how the SQL joins game and player tables to fetch the username for the creator and the word table for the word.
 </p>
 
 
-<div id="org68f0edc" class="figure">
+<div id="orgd4c1da6" class="figure">
 <p><img src="./static/DB/game.png" alt="game.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 4: </span>Picasso Game Table</p>
@@ -412,11 +415,11 @@ Note how the SQL joins game and player tables to fetch the username for the crea
 </div>
 
 
-<div id="outline-container-orga65fec3" class="outline-4">
-<h4 id="orga65fec3">The Picture table</h4>
-<div class="outline-text-4" id="text-orga65fec3">
+<div id="outline-container-orgb52ff5f" class="outline-4">
+<h4 id="orgb52ff5f">The Picture table</h4>
+<div class="outline-text-4" id="text-orgb52ff5f">
 
-<div id="orgcb2c2b9" class="figure">
+<div id="org1b111e2" class="figure">
 <p><img src="./static/DB/picture.png" alt="picture.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 5: </span>Picasso Picture Table</p>
@@ -435,15 +438,15 @@ The players can optionally title their drawings.
 </div>
 </div>
 
-<div id="outline-container-org381d001" class="outline-3">
-<h3 id="org381d001">Code Overview</h3>
-<div class="outline-text-3" id="text-org381d001">
+<div id="outline-container-org899b373" class="outline-3">
+<h3 id="org899b373">Code Overview</h3>
+<div class="outline-text-3" id="text-org899b373">
 </div>
-<div id="outline-container-orgd1fd88c" class="outline-4">
-<h4 id="orgd1fd88c">DBEntity Folder</h4>
-<div class="outline-text-4" id="text-orgd1fd88c">
+<div id="outline-container-org4791592" class="outline-4">
+<h4 id="org4791592">DBEntity Folder</h4>
+<div class="outline-text-4" id="text-org4791592">
 
-<div id="org2bb4127" class="figure">
+<div id="org36dfd5e" class="figure">
 <p><img src="./static/code/DBEntity.png" alt="DBEntity.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 6: </span>Picasso DB Entities Folder</p>
@@ -461,11 +464,11 @@ Game, Line, Picture, Player and Word are MySQL entities, while PlayerVO and Doub
 </div>
 </div>
 
-<div id="outline-container-org756baeb" class="outline-4">
-<h4 id="org756baeb">Connector</h4>
-<div class="outline-text-4" id="text-org756baeb">
+<div id="outline-container-orgfab3d33" class="outline-4">
+<h4 id="orgfab3d33">Connector</h4>
+<div class="outline-text-4" id="text-orgfab3d33">
 
-<div id="orgd197bd1" class="figure">
+<div id="org83c89e9" class="figure">
 <p><img src="./static/code/Connector.png" alt="Connector.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 7: </span>Picasso Connectors</p>
@@ -492,9 +495,9 @@ Another important note for connectors is that all public methods return a Respon
 </div>
 </div>
 
-<div id="outline-container-org9bd49f1" class="outline-4">
-<h4 id="org9bd49f1">Response.java</h4>
-<div class="outline-text-4" id="text-org9bd49f1">
+<div id="outline-container-orgf4f3e63" class="outline-4">
+<h4 id="orgf4f3e63">Response.java</h4>
+<div class="outline-text-4" id="text-orgf4f3e63">
 <p>
 A very important class is the Response.java class in the utils folder. For flexibility, the back-end is designed independently from the front-end.
 The back-end provides a public API that returns a consistent response in the form of a Response object for all its DB operations.
@@ -597,9 +600,9 @@ a Player instance with the newly created player information populated.
 </div>
 </div>
 
-<div id="outline-container-org0a000b6" class="outline-4">
-<h4 id="org0a000b6">RedisConnector.java</h4>
-<div class="outline-text-4" id="text-org0a000b6">
+<div id="outline-container-org6a5deb2" class="outline-4">
+<h4 id="org6a5deb2">RedisConnector.java</h4>
+<div class="outline-text-4" id="text-org6a5deb2">
 <p>
 In addition to the MySQL back-end, picasso implements an in-memory database (Redis) for scalability and performance. For example, all the necessary communications
 between the java clients from getting a list of all players who are currently online to coordinating the notifications between players for dual games
@@ -608,9 +611,9 @@ are entirely handled by Redis without involving the MySQL back-end.
 </div>
 </div>
 
-<div id="outline-container-org2a93541" class="outline-4">
-<h4 id="org2a93541">CHATGPTConnector.java</h4>
-<div class="outline-text-4" id="text-org2a93541">
+<div id="outline-container-org67b7d48" class="outline-4">
+<h4 id="org67b7d48">CHATGPTConnector.java</h4>
+<div class="outline-text-4" id="text-org67b7d48">
 <p>
 As you've probably guessed, this connector handles the communication between java client and the AI server.
 It sends the finished drawings for scoring when the game is finished, and recives a score and a remark to display to the user.
@@ -622,11 +625,11 @@ See this connector for the prompt that instructs ChatGPT to score the image. The
 </div>
 </div>
 
-<div id="outline-container-org981f060" class="outline-4">
-<h4 id="org981f060">exceptions</h4>
-<div class="outline-text-4" id="text-org981f060">
+<div id="outline-container-org5a80cfb" class="outline-4">
+<h4 id="org5a80cfb">exceptions</h4>
+<div class="outline-text-4" id="text-org5a80cfb">
 
-<div id="org226f59a" class="figure">
+<div id="org6f59f41" class="figure">
 <p><img src="./static/code/exceptions.png" alt="exceptions.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 8: </span>Picasso Custom Exceptions</p>
@@ -638,11 +641,11 @@ As you've seen above, picasso has several custom exceptions to give more informa
 </div>
 </div>
 
-<div id="outline-container-orgec30924" class="outline-4">
-<h4 id="orgec30924">utils</h4>
-<div class="outline-text-4" id="text-orgec30924">
+<div id="outline-container-org7311a67" class="outline-4">
+<h4 id="org7311a67">utils</h4>
+<div class="outline-text-4" id="text-org7311a67">
 
-<div id="orge8d2a31" class="figure">
+<div id="org801d82b" class="figure">
 <p><img src="./static/code/utils.png" alt="utils.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 9: </span>Picasso utility classes</p>
@@ -661,11 +664,11 @@ Painter.java helps with UI functionality.
 </div>
 </div>
 
-<div id="outline-container-orgb1d5c0a" class="outline-4">
-<h4 id="orgb1d5c0a">UI</h4>
-<div class="outline-text-4" id="text-orgb1d5c0a">
+<div id="outline-container-org25f9300" class="outline-4">
+<h4 id="org25f9300">UI</h4>
+<div class="outline-text-4" id="text-org25f9300">
 
-<div id="orga5790c1" class="figure">
+<div id="org9670581" class="figure">
 <p><img src="./static/code/UI.png" alt="UI.png" width="700px" />
 </p>
 <p><span class="figure-number">Figure 10: </span>Picasso utility classes</p>
