@@ -20,7 +20,9 @@ In dual game mode, a player can send a challenge to another player for a showdow
 ** Game Demo
 Download the game demo video [[./doc/static/demo/main_demo.mp4][here]] to see the game in action!
 
-Or watch it online at [[https://youtu.be/U-DEWoChV_Y][file:https://img.youtube.com/vi/U-DEWoChV_Y/0.jpg]]
+Or watch it online at
+
+[[https://youtu.be/U-DEWoChV_Y][file:https://img.youtube.com/vi/U-DEWoChV_Y/0.jpg]]
 
 As shown in the demo video, a player first registers and logs in.
 In case of single-game, the player is given a random word to draw. As the player draws, all the strokes are captured and stored in the back-end
