@@ -1,9 +1,6 @@
 package NYU.SPJAVA.UI;
 
-import NYU.SPJAVA.Connector.ChatGPTConnector;
-import NYU.SPJAVA.Connector.GameDBConnector;
-import NYU.SPJAVA.Connector.LineDBConnector;
-import NYU.SPJAVA.Connector.PictureDBConnector;
+import NYU.SPJAVA.Connector.*;
 import NYU.SPJAVA.DBEntity.*;
 import NYU.SPJAVA.NetworkEntity.ChatGPTResponse;
 import NYU.SPJAVA.utils.Painter;
@@ -15,6 +12,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class DrawPanel extends JPanel {
 //    private String UID; // User ID, the user that is playing this game
@@ -33,6 +31,7 @@ public class DrawPanel extends JPanel {
     private ArrayList<Line> lines;
     private GameDBConnector gameDBConnector;
     private PictureDBConnector picDBConnector;
+    private RedisConnector redisConnector;
     public DrawPanel(Game singleGame) throws Exception {
         this.game = singleGame;
         this.picDBConnector = new PictureDBConnector();
@@ -40,6 +39,7 @@ public class DrawPanel extends JPanel {
         this.lines = new ArrayList<>();
         this.lineDBConnector = new LineDBConnector();
         this.gameDBConnector = new GameDBConnector();
+        this.redisConnector = new RedisConnector();
         initializeUI();
     }
 
@@ -98,13 +98,53 @@ public class DrawPanel extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    submitPicture();
+                    String[] scoreAndComment = submitPicture();
+                    DoubleGameRoom doubleGameRoom = redisConnector.retrieveRoomByInvitedID(game.getCreator().getPlayerID());
+                    if (doubleGameRoom != null) {
+                        // This player is the invited player
+                        doubleGameRoom = redisConnector.retrieveRoomByInvitedID(game.getCreator().getPlayerID());
+                        doubleGameRoom.setInvitedScore(Integer.parseInt(scoreAndComment[0]));
+                        redisConnector.updateGameRoom(doubleGameRoom);
+                        Timer checkHostScore = null;
+                        Timer finalCheckHostScore = checkHostScore;
+                        checkHostScore = new Timer(1000, e1 -> {
+                            DoubleGameRoom tmp = redisConnector.retrieveRoomByInvitedID(game.getCreator().getPlayerID());
+                            if (tmp.getHostScore() != 0) {
+                                System.out.println("Host player got score:" + tmp.getHostScore());
+                                String msg = generateCompetitionResult("invited", tmp);
+                                System.out.println(msg);
+                                JOptionPane.showMessageDialog(null, msg);
+                                finalCheckHostScore.stop();
+                            }
+                        });
+                        checkHostScore.start();
+                    }else{
+                        //this player is the host
+                        doubleGameRoom = redisConnector.retrieveRoomByHostID(game.getCreator().getPlayerID());
+                        doubleGameRoom.setHostScore(Integer.parseInt(scoreAndComment[0]));
+                        redisConnector.updateGameRoom(doubleGameRoom);
+                        Timer checkInvitedScore = null;
+                        Timer finalCheckInvitedScore = checkInvitedScore;
+                        checkInvitedScore = new Timer(1000, e1 -> {
+                            DoubleGameRoom tmp = redisConnector.retrieveRoomByHostID(game.getCreator().getPlayerID());
+                            if(tmp.getInvitedScore()!=0){
+                                System.out.println("Invited player got score:"+tmp.getInvitedScore());
+                                String msg = generateCompetitionResult("host",tmp);
+                                System.out.println(msg);
+                                JOptionPane.showMessageDialog(null, msg);
+                                finalCheckInvitedScore.stop();
+                            }
+
+                        });
+                        checkInvitedScore.start();
+                    }
                 } catch (IOException ex) {
                     throw new RuntimeException(ex);
                 } catch (AWTException ex) {
                     throw new RuntimeException(ex);
                 }
-                JOptionPane.showMessageDialog(null, "Picture saved!");
+                timer.stop();
+//                JOptionPane.showMessageDialog(null, "Picture saved!");
 
             }
         });
@@ -190,7 +230,7 @@ public class DrawPanel extends JPanel {
         eraserMode = !eraserMode;
         ((JButton)toolBar.getComponent(0)).setEnabled(!eraserMode);  // Enable/Disable color button based on eraser mode
     }
-    private void submitPicture() throws IOException, AWTException {
+    private String[] submitPicture() throws IOException, AWTException {
         // save all lines in DB
         lineDBConnector.saveLines(lines);
         // save screenshot of the picture
@@ -206,6 +246,47 @@ public class DrawPanel extends JPanel {
         this.picDBConnector.updatePicture(this.picture);
         // show score and comment from ChatGPT to user
         JOptionPane.showMessageDialog(null, "Score: "+score+" Comment: "+comment);
+        return new String[]{score, comment};
+    }
+    //generate result msg according to the scores of both player, if both player checked Score, delete that record from redis
+    private String generateCompetitionResult(String player_identity, DoubleGameRoom doubleGameRoom){
+        int hostScore = doubleGameRoom.getHostScore();
+        int invitedScore = doubleGameRoom.getInvitedScore();
+        String word = doubleGameRoom.getWord();
+        String msg = "";
+
+        if(player_identity.equals("host")){
+            if(hostScore > invitedScore){
+                msg = "You win the game on word: " + word + ". You got: " + hostScore + " points, your opponent player " + doubleGameRoom.getInvitedPlayerID() + " got " + invitedScore + " points.";
+            } else if (hostScore < invitedScore) {
+                msg = "You lose the game on word: " + word + ". You got: " + hostScore + " points, your opponent player " + doubleGameRoom.getInvitedPlayerID() + " got " + invitedScore + " points.";
+            } else {
+                msg = "The game on word: " + word + " ended in a draw. You and invited player:"+doubleGameRoom.getInvitedPlayerID()+" scored " + hostScore + " points.";
+            }
+            doubleGameRoom.numOfCheckPlusPlus();
+            redisConnector.updateGameRoom(doubleGameRoom);
+            if(doubleGameRoom.getNumOfCheck()==2){
+                System.out.println("Both player checked score!");
+                redisConnector.removeGameRoom(doubleGameRoom);
+            }
+
+        }else {
+            if(invitedScore > hostScore){
+                msg = "You win the game on word: " + word + ". You got: " + invitedScore + " points, your opponent player " + doubleGameRoom.getHostPlayerID() + " got " + hostScore + " points.";
+            } else if (invitedScore < hostScore) {
+                msg = "You lose the game on word: " + word + ". You got: " + invitedScore + " points, your opponent player " + doubleGameRoom.getHostPlayerID() + " got " + hostScore + " points.";
+            } else {
+                msg = "The game on word: " + word + " ended in a draw. You and host player:" + doubleGameRoom.getHostPlayerID() + " scored " + invitedScore + " points.";
+            }
+            doubleGameRoom.numOfCheckPlusPlus();
+            redisConnector.updateGameRoom(doubleGameRoom);
+            if(doubleGameRoom.getNumOfCheck()==2){
+                System.out.println("Both players checked the score!");
+                redisConnector.removeGameRoom(doubleGameRoom);
+            }
+        }
+
+        return msg;
     }
 
     public static void main(String[] args) throws Exception {

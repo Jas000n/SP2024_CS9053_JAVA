@@ -1,0 +1,91 @@
+package NYU.SPJAVA.DBEntity;
+
+
+public class DoubleGameRoom {
+    private int hostPlayerID; //player ID of host player
+    private int invitedPlayerID; //player ID of invited player
+    private String word; //word for this game
+    private int hostScore; // score host got
+    private String status; //status of this game room
+    private int invitedScore; //score the other player got
+    private int numOfCheck;//how many player retrieved the result
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public int getHostPlayerID() {
+        return hostPlayerID;
+    }
+
+    public void setHostPlayerID(int hostPlayerID) {
+        this.hostPlayerID = hostPlayerID;
+    }
+
+    public int getInvitedPlayerID() {
+        return invitedPlayerID;
+    }
+
+    public void setInvitedPlayerID(int invitedPlayerID) {
+        this.invitedPlayerID = invitedPlayerID;
+    }
+
+    public String getWord() {
+        return word;
+    }
+
+    public void setWord(String word) {
+        this.word = word;
+    }
+
+    public int getHostScore() {
+        return hostScore;
+    }
+
+    public void setHostScore(int hostScore) {
+        this.hostScore = hostScore;
+    }
+
+    public int getInvitedScore() {
+        return invitedScore;
+    }
+
+    public void setInvitedScore(int invitedScore) {
+        this.invitedScore = invitedScore;
+    }
+
+    public DoubleGameRoom(int hostPlayerID, int invitedPlayerID, String word, int hostScore, int invitedScore, String status) {
+        this.hostPlayerID = hostPlayerID;
+        this.invitedPlayerID = invitedPlayerID;
+        this.word = word;
+        this.hostScore = hostScore;
+        this.invitedScore = invitedScore;
+        this.status = status;
+        this.numOfCheck = 0;
+    }
+
+    public DoubleGameRoom(int hostPlayerID, int invitedPlayerID, String word, int hostScore, int invitedScore,String status,  int numOfCheck) {
+        this.hostPlayerID = hostPlayerID;
+        this.invitedPlayerID = invitedPlayerID;
+        this.word = word;
+        this.hostScore = hostScore;
+        this.status = status;
+        this.invitedScore = invitedScore;
+        this.numOfCheck = numOfCheck;
+    }
+
+    public int getNumOfCheck() {
+        return numOfCheck;
+    }
+
+    public void setNumOfCheck(int numOfCheck) {
+        this.numOfCheck = numOfCheck;
+    }
+    public void numOfCheckPlusPlus(){
+        this.numOfCheck+=1;
+    }
+}
