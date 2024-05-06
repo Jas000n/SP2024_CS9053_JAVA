@@ -10,15 +10,32 @@ Author: Rafik Saad, Shunyu Yao
 This document will explain how to setup and run Picasso locally
 and will also explain the overall design of the game
 
-** Initial Project Proposal
-https://docs.google.com/document/d/1aO9fvQelEkossk3RTu6pW3BVT6K4UT_pkEtnCZRO3jw/edit#heading=h.9cd9ii6jioqa
-
 ** What is picasso?
 Picasso is an AI powered drawing game.
 Players are given a blank canvas and a random scene to draw. The drawings are then graded by ChatGPT4.
 It supports both single and dual game modes, and provides additional features such as replaying drawings.
 
 In dual game mode, a player can send a challenge to another player for a showdown. Whoever scores higher, wins.
+
+** Game Demo
+Download the game demo video [[./doc/static/demo/main_demo.mp4][here]] to see the game in action!
+
+Or watch it online at
+
+[[https://youtu.be/U-DEWoChV_Y][file:https://img.youtube.com/vi/U-DEWoChV_Y/0.jpg]]
+
+As shown in the demo video, a player first registers and logs in.
+In case of single-game, the player is given a random word to draw. As the player draws, all the strokes are captured and stored in the back-end
+to provide the replay/repaint feature. Once the game ends, the canvas is turned into an image and sent to ChatGPT4 for scoring.
+ChatGPT4 returns both a score and a remark which are displayed to the user. These information are also written to the back-end for storage.
+
+for dual game mode, some coordination between java clients need to happen for a player to be able to issue a game challenge to another player and to view the list of online players.
+for performance and scalability, this coordination is not handled by the back-end, instead it's handled by Redis, a high performance in-memory database.
+
+The next sections will go over the overall design in more details.
+
+** Initial Project Proposal
+https://docs.google.com/document/d/19FktuLiQ-zVUWdq7HzXyD6vbkcrlJ3tr5oZ2dogKH8A/edit?usp=sharing
 
 ** Environment Setup
 To run picasso locally, you'll need the following prerequisites:
@@ -42,18 +59,7 @@ To run picasso locally, you'll need the following prerequisites:
 
 That's it, now you're ready to play, simply run [[https://github.com/Jas000n/SP2024_CS9053_JAVA/blob/develop/src/main/java/NYU/SPJAVA/UI/Main.java][Main.java]]
 
-** Game Demo
-Download the game demo video [[./doc/static/demo/main_demo.mp4][here]] to see the game in action!
 
-As shown in the demo video, a player first registers and logs in.
-In case of single-game, the player is given a random word to draw. As the player draws, all the strokes are captured and stored in the back-end
-to provide the replay/repaint feature. Once the game ends, the canvas is turned into an image and sent to ChatGPT4 for scoring.
-ChatGPT4 returns both a score and a remark which are displayed to the user. These information are also written to the back-end for storage.
-
-for dual game mode, some coordination between java clients need to happen for a player to be able to issue a game challenge to another player and to view the list of online players.
-for performance and scalability, this coordination is not handled by the back-end, instead it's handled by Redis, a high performance in-memory database.
-
-The next sections will go over the overall design in more details.
 ** Backend Design Overview
 
 After running the CreateAllTables script above, your back-end should look like this:
